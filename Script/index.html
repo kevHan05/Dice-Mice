@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dice-Mice!</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Dice-Mice!</h1>
+
+  <main>
+    <svg id="brett" viewBox="0 0 700 700" aria-label="Spillbrettet"></svg>
+
+    <aside>
+      <p id="status"></p>
+      <div id="terning" class="terning" aria-live="polite"></div>
+      <button id="kast">Kast terningen</button>
+    </aside>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
