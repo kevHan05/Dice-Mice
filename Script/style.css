@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   padding: 16px;
@@ -76,4 +80,75 @@ button {
 button:disabled {
   background: #bbb;
   cursor: default;
+}
+
+/* ---------- Startskjerm ---------- */
+.startskjerm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.startskjerm form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.etikett {
+  margin: 8px 0 0;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.antall-valg {
+  display: flex;
+  gap: 8px;
+}
+
+.antall-valg button {
+  width: 52px;
+  padding: 10px 0;
+  background: #fffaf0;
+  color: #333;
+  border: 3px solid #8a7650;
+}
+
+.antall-valg button.valgt {
+  background: #e8a317;
+  border-color: #e8a317;
+  color: #fff;
+}
+
+.navnefelt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.navnerad {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.museikon {
+  width: 50px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.navnerad input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px;
+  font-size: 1rem;
+  border: 2px solid #8a7650;
+  border-radius: 8px;
 }

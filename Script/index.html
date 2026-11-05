@@ -9,8 +9,24 @@
 <body>
   <h1>Dice-Mice!</h1>
 
-  <main>
-    <svg id="brett" viewBox="0 0 700 700" aria-label="Spillbrettet"></svg>
+  <section id="startskjerm" class="startskjerm">
+    <p class="etikett">Antall spillere</p>
+    <div id="antallValg" class="antall-valg">
+      <button type="button" data-antall="1">1</button>
+      <button type="button" data-antall="2">2</button>
+      <button type="button" data-antall="3">3</button>
+      <button type="button" data-antall="4">4</button>
+    </div>
+
+    <form id="navneskjema">
+      <p class="etikett">Navn</p>
+      <div id="navnefelt" class="navnefelt"></div>
+      <button type="submit">Start spillet</button>
+    </form>
+  </section>
+
+  <main id="spillet" hidden>
+    <svg id="brett" viewBox="0 -30 700 730" aria-label="Spillbrettet"></svg>
 
     <aside>
       <p id="status"></p>

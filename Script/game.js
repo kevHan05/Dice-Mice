@@ -1,14 +1,14 @@
 // Dice-Mice! – første utkast (prototype)
 
 // ---------- Innstillinger ----------
-const ANTALL_SPILLERE = 2;   // 1–4
 const ANTALL_STEG = 40;      // steg på spiralen, inkludert START
-const SPILLERE = [
+// Spiller 1 får første farge, spiller 2 den andre osv. Navnet brukes hvis spilleren ikke skriver inn noe.
+const MUSER = [
   { navn: 'Grå mus',   farge: '#9a9a9a' },
   { navn: 'Brun mus',  farge: '#a0703c' },
   { navn: 'Hvit mus',  farge: '#f5f5f5' },
   { navn: 'Svart mus', farge: '#444444' },
-].slice(0, ANTALL_SPILLERE);
+];
 
 const SENTER = 350;
 const YTRE_RADIUS = 300;
@@ -18,10 +18,17 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // ---------- Tilstand ----------
 // Posisjon 0 = START, ANTALL_STEG = osten i midten
-let posisjoner = SPILLERE.map(() => 0);
+let spillere = [];      // fylles fra startskjermen
+let posisjoner = [];
 let tur = 0;
 let ferdig = false;
+let antallValgt = 2;   // forhåndsvalgt på startskjermen
 
+const startskjerm = document.getElementById('startskjerm');
+const antallValg = document.getElementById('antallValg');
+const navneskjema = document.getElementById('navneskjema');
+const navnefelt = document.getElementById('navnefelt');
+const spillet = document.getElementById('spillet');
 const brett = document.getElementById('brett');
 const statusTekst = document.getElementById('status');
 const terning = document.getElementById('terning');
@@ -94,14 +101,20 @@ function tegnBrett() {
 
 // Et ostestykke skåret ut som et kakestykke fra en stor rund ost
 function tegnOst(g) {
-  lag('path', { d: 'M -50 0 L 45 2 L 45 28 L -50 26 Z', fill: '#f2b72c', stroke: '#b07a10', 'stroke-width': 2 }, g); // forside
-  lag('path', { d: 'M -50 0 L 32 -30 Q 47 -15 45 2 Z', fill: '#ffd54a', stroke: '#b07a10', 'stroke-width': 2 }, g); // overside
-  lag('path', { d: 'M 32 -30 Q 47 -15 45 2 L 45 28 Q 49 0 32 -4 Z', fill: '#e09a1a', stroke: '#b07a10', 'stroke-width': 2 }, g); // skorpe
+  // Kakestykke sett litt ovenfra: spissen peker mot venstre (der midten av den runde osten var),
+  // den buede skorpen er på høyre side.
+  const kant = { stroke: '#b07a10', 'stroke-width': 2, 'stroke-linejoin': 'round' };
+  // Skorpe (den buede utsiden av den runde osten)
+  lag('path', { d: 'M 37.3 1.4 A 95 42.75 0 0 0 50 -20 L 50 10 A 95 42.75 0 0 1 37.3 31.4 Z', fill: '#e09a1a', ...kant }, g);
+  // Forside (snittflaten)
+  lag('path', { d: 'M -45 -20 L 37.3 1.4 L 37.3 31.4 L -45 10 Z', fill: '#f2b72c', ...kant }, g);
+  // Overside
+  lag('path', { d: 'M -45 -20 L 37.3 1.4 A 95 42.75 0 0 0 46.8 -31.1 Z', fill: '#ffd54a', ...kant }, g);
   // Hull
-  lag('ellipse', { cx: -20, cy: 14, rx: 6, ry: 5, fill: '#d99a1c' }, g);
-  lag('ellipse', { cx: 15, cy: 18, rx: 4, ry: 3.5, fill: '#d99a1c' }, g);
-  lag('ellipse', { cx: 10, cy: -10, rx: 6, ry: 3, fill: '#e6b52e' }, g);
-  lag('ellipse', { cx: 30, cy: -14, rx: 3, ry: 1.8, fill: '#e6b52e' }, g);
+  lag('ellipse', { cx: -15, cy: 3, rx: 6, ry: 5, fill: '#d99a1c' }, g);
+  lag('ellipse', { cx: 15, cy: 16, rx: 4.5, ry: 4, fill: '#d99a1c' }, g);
+  lag('ellipse', { cx: 0, cy: -17, rx: 5, ry: 2.2, fill: '#e6b52e' }, g);
+  lag('ellipse', { cx: 25, cy: -15, rx: 3.5, ry: 1.6, fill: '#e6b52e' }, g);
 }
 
 // En enkel mus med ører og hale
@@ -123,7 +136,7 @@ const FORSKYVNING = [[0, 0], [-10, -12], [10, 12], [-10, 12], [10, -12]];
 function tegnMusene() {
   const lagMus = document.getElementById('muselag');
   lagMus.innerHTML = '';
-  SPILLERE.forEach((spiller, i) => {
+  spillere.forEach((spiller, i) => {
     const plass = plasser[posisjoner[i]];
     const samme = posisjoner.filter((p) => p === posisjoner[i]).length;
     const rekkefolge = posisjoner.slice(0, i).filter((p) => p === posisjoner[i]).length;
@@ -150,7 +163,7 @@ function visTerning(verdi) {
 }
 
 function oppdaterStatus() {
-  statusTekst.textContent = `${SPILLERE[tur].navn} sin tur`;
+  statusTekst.textContent = `${spillere[tur].navn} sin tur`;
 }
 
 // ---------- Spillogikk ----------
@@ -165,17 +178,72 @@ function kastTerning() {
   if (posisjoner[tur] === ANTALL_STEG) {
     ferdig = true;
     kastKnapp.disabled = true;
-    statusTekst.textContent = `${SPILLERE[tur].navn} kom først til osten og vant!`;
+    statusTekst.textContent = `${spillere[tur].navn} kom først til osten og vant!`;
     return;
   }
 
-  tur = (tur + 1) % SPILLERE.length;
+  tur = (tur + 1) % spillere.length;
   oppdaterStatus();
 }
 
+// ---------- Startskjerm ----------
+// Lager ett navnefelt per spiller, med musen spilleren får ved siden av
+function visNavnefelt() {
+  const skrevet = [...navnefelt.querySelectorAll('input')].map((f) => f.value);
+  navnefelt.innerHTML = '';
+
+  for (let i = 0; i < antallValgt; i++) {
+    const rad = document.createElement('label');
+    rad.className = 'navnerad';
+
+    const ikon = document.createElementNS(SVG_NS, 'svg');
+    ikon.setAttribute('viewBox', '-32 -20 60 36');
+    ikon.setAttribute('class', 'museikon');
+    tegnMus(ikon, MUSER[i].farge);
+
+    const felt = document.createElement('input');
+    felt.type = 'text';
+    felt.maxLength = 20;
+    felt.placeholder = MUSER[i].navn;
+    felt.value = skrevet[i] || '';
+    felt.setAttribute('aria-label', `Navn på spiller ${i + 1}`);
+
+    rad.append(ikon, felt);
+    navnefelt.appendChild(rad);
+  }
+
+  antallValg.querySelectorAll('button').forEach((knapp) => {
+    knapp.classList.toggle('valgt', Number(knapp.dataset.antall) === antallValgt);
+  });
+}
+
+function startSpillet(hendelse) {
+  hendelse.preventDefault();
+  const felt = [...navnefelt.querySelectorAll('input')];
+  spillere = felt.map((f, i) => ({
+    navn: f.value.trim() || MUSER[i].navn,
+    farge: MUSER[i].farge,
+  }));
+  posisjoner = spillere.map(() => 0);
+  tur = 0;
+  ferdig = false;
+
+  startskjerm.hidden = true;
+  spillet.hidden = false;
+  tegnMusene();
+  visTerning(null);
+  oppdaterStatus();
+}
+
+antallValg.addEventListener('click', (hendelse) => {
+  const knapp = hendelse.target.closest('button');
+  if (!knapp) return;
+  antallValgt = Number(knapp.dataset.antall);
+  visNavnefelt();
+});
+
 // ---------- Start ----------
 tegnBrett();
-tegnMusene();
-visTerning(null);
-oppdaterStatus();
+visNavnefelt();
+navneskjema.addEventListener('submit', startSpillet);
 kastKnapp.addEventListener('click', kastTerning);
