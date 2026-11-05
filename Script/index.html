@@ -7,7 +7,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Dice-Mice!</h1>
+  <header class="topp">
+    <h1>Dice-Mice!</h1>
+    <div class="lydknapper">
+      <button type="button" id="lydKnapp" class="liten-knapp" aria-pressed="true">🔊 Lyd på</button>
+      <!-- Vises bare når Script/musikk.mp3 finnes -->
+      <button type="button" id="musikkKnapp" class="liten-knapp" aria-pressed="false" hidden>🎵 Musikk av</button>
+    </div>
+  </header>
 
   <section id="startskjerm" class="startskjerm">
     <p class="etikett">Antall spillere</p>
@@ -18,23 +25,44 @@
       <button type="button" data-antall="4">4</button>
     </div>
 
+    <p class="etikett">Brett</p>
+    <div id="brettValg" class="antall-valg brett-valg">
+      <button type="button" data-brett="kort">Kort</button>
+      <button type="button" data-brett="vanlig">Vanlig</button>
+      <button type="button" data-brett="lang">Lang</button>
+    </div>
+
     <form id="navneskjema">
-      <p class="etikett">Navn</p>
+      <p class="etikett">Navn og pynt</p>
       <div id="navnefelt" class="navnefelt"></div>
       <button type="submit">Start spillet</button>
     </form>
   </section>
 
   <main id="spillet" hidden>
-    <svg id="brett" viewBox="0 -30 700 730" aria-label="Spillbrettet"></svg>
+    <div id="brettramme" class="brettramme">
+      <svg id="brett" viewBox="0 -30 700 730" aria-label="Spillbrettet"></svg>
+    </div>
 
     <aside>
       <ul id="spillerliste" class="spillerliste" aria-label="Spillere"></ul>
       <p id="status"></p>
+      <p id="hendelse" class="hendelse" aria-live="polite"></p>
       <div id="terning" class="terning" aria-live="polite"></div>
       <button id="kast">Kast terningen</button>
+      <button id="tilPallen" type="button" hidden>Se pallen 🏆</button>
+      <div id="reaksjoner" class="reaksjoner" role="group" aria-label="Send en reaksjon"></div>
     </aside>
   </main>
+
+  <section id="resultat" class="resultat" hidden>
+    <h2>Resultat</h2>
+    <svg id="pall" viewBox="0 -20 460 290" role="img" aria-label="Resultat"></svg>
+    <div class="resultatknapper">
+      <button id="spillIgjen" type="button">Spill igjen</button>
+      <button id="tilLobby" type="button" class="andre-knapp">Tilbake til lobby</button>
+    </div>
+  </section>
 
   <script src="game.js"></script>
 </body>

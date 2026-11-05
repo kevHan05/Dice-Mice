@@ -6,19 +6,72 @@
   display: none !important;
 }
 
+/* Bakgrunn: rolige ostehull i samme farger som før */
 body {
   margin: 0;
   padding: 16px;
   font-family: system-ui, sans-serif;
-  background: #f4efe3;
+  background-color: #f4efe3;
+  background-image:
+    radial-gradient(circle, #ece2cb 0 14px, transparent 15px),
+    radial-gradient(circle, #efe7d4 0 8px, transparent 9px);
+  background-size: 160px 160px, 110px 110px;
+  background-position: 0 0, 55px 70px;
   color: #333;
   text-align: center;
 }
 
 h1 {
-  margin: 0 0 16px;
+  margin: 0;
 }
 
+h2 {
+  margin: 0;
+}
+
+/* ---------- Toppen: tittel og lydknapper ---------- */
+.topp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.lydknapper {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 10px;
+  background: #e8a317;
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation; /* trykk på telefon reagerer med en gang, uten zoom ved dobbelttrykk */
+}
+
+button:disabled {
+  background: #bbb;
+  cursor: default;
+}
+
+.liten-knapp,
+.andre-knapp {
+  background: #fffaf0;
+  color: #333;
+  border: 2px solid #8a7650;
+}
+
+.liten-knapp {
+  padding: 6px 12px;
+  font-size: 0.95rem;
+}
+
+/* ---------- Spillet ---------- */
 main {
   display: flex;
   flex-wrap: wrap;
@@ -27,10 +80,16 @@ main {
   gap: 24px;
 }
 
+/* Rammen rundt brettet: her flyter emoji-reaksjonene opp */
+.brettramme {
+  position: relative;
+}
+
 /* Brettet tilpasser seg både bredden og høyden på skjermen,
    så hele brettet synes uten å scrolle på PC */
 #brett {
-  width: min(90vw, 640px, calc(100vh - 100px));
+  display: block;
+  width: min(90vw, 640px, calc(100vh - 140px));
   min-width: 280px;
   height: auto;
 }
@@ -41,6 +100,7 @@ aside {
   align-items: center;
   gap: 16px;
   min-width: 200px;
+  max-width: 340px;
 }
 
 #status {
@@ -49,6 +109,22 @@ aside {
   font-weight: bold;
 }
 
+/* Hva som skjedde på et spesialfelt */
+.hendelse {
+  margin: 0;
+  min-height: 1.4em;
+}
+
+/* Feltet musen skal til, lyser opp før den hopper */
+.maalfelt {
+  animation: lyse 0.35s ease-in-out infinite alternate;
+}
+
+@keyframes lyse {
+  to { fill: #ffe08a; stroke: #e8a317; }
+}
+
+/* ---------- Terning ---------- */
 /* Terningen: 3 x 3 rutenett der prikkene plasseres */
 .terning {
   width: 90px;
@@ -60,6 +136,14 @@ aside {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
+}
+
+.prikk {
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  border-radius: 50%;
+  background: #333;
 }
 
 /* Terningen vipper frem og tilbake mens den ruller */
@@ -74,6 +158,7 @@ aside {
   100% { transform: rotate(0deg); }
 }
 
+/* ---------- Musene ---------- */
 /* Musene beveger seg litt mens de står i ro */
 .mus-kropp {
   transform-box: fill-box;
@@ -91,11 +176,45 @@ aside {
   50%      { transform: translateY(-1.5px) rotate(-3deg); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .mus-kropp,
-  .terning.triller {
-    animation: none;
-  }
+/* ---------- Katten ved kattefeltet ---------- */
+.katt-sur {
+  display: none;
+}
+
+.katt.sur .katt-sur {
+  display: inline;
+}
+
+.katt.sur .katt-sover {
+  display: none;
+}
+
+/* En «z» flyter opp mens katten sover */
+.katt-zzz {
+  transform-box: fill-box;
+  animation: zzz 2.2s ease-in-out infinite;
+}
+
+@keyframes zzz {
+  0%   { opacity: 0; transform: translate(0, 0); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(5px, -9px); }
+}
+
+/* Sur katt rister */
+.katt-kropp {
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+}
+
+.katt.sur .katt-kropp {
+  animation: rist 0.12s linear infinite;
+}
+
+@keyframes rist {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-1px) rotate(-3deg); }
+  75%      { transform: translateX(1px) rotate(3deg); }
 }
 
 /* ---------- Spillerliste ---------- */
@@ -125,75 +244,55 @@ aside {
   font-weight: bold;
 }
 
-/* ---------- Telefon (smal skjerm) ---------- */
-@media (max-width: 600px) {
-  body {
-    padding: 12px;
-  }
-
-  h1 {
-    margin-bottom: 8px;
-    font-size: 1.6rem;
-  }
-
-  main {
-    gap: 12px;
-  }
-
-  #brett {
-    width: 100%;
-  }
-
-  aside {
-    width: 100%;
-    gap: 12px;
-  }
-
-  /* Spillerne står ved siden av hverandre, så alt får plass under brettet */
-  .spillerliste {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .spillerliste li {
-    padding: 4px 8px;
-  }
-
-  .terning {
-    width: 72px;
-    height: 72px;
-    padding: 8px;
-  }
-
-  .terning .prikk {
-    width: 13px;
-    height: 13px;
-  }
+/* ---------- Emoji-reaksjoner ---------- */
+.reaksjoner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
 }
 
-.prikk {
-  width: 16px;
-  height: 16px;
-  margin: auto;
-  border-radius: 50%;
-  background: #333;
+.emoji-knapp {
+  padding: 6px 8px;
+  font-size: 1.4rem;
+  line-height: 1;
+  background: #fffaf0;
+  border: 2px solid #d9c9a3;
 }
 
-button {
-  padding: 12px 24px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 10px;
-  background: #e8a317;
-  color: #fff;
-  cursor: pointer;
-  touch-action: manipulation; /* trykk på telefon reagerer med en gang, uten zoom ved dobbelttrykk */
+.reaksjon {
+  position: absolute;
+  bottom: 15%;
+  font-size: 3rem;
+  pointer-events: none;
+  transform: translateX(-50%);
+  animation: flyt 2s ease-out forwards;
 }
 
-button:disabled {
-  background: #bbb;
-  cursor: default;
+@keyframes flyt {
+  0%   { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+  15%  { transform: translate(-50%, -20px) scale(1.1); opacity: 1; }
+  100% { transform: translate(-50%, -220px) scale(1); opacity: 0; }
+}
+
+/* ---------- Pallen etter spillet ---------- */
+.resultat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+#pall {
+  width: min(100%, 560px);
+  height: auto;
+}
+
+.resultatknapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
 }
 
 /* ---------- Startskjerm ---------- */
@@ -202,7 +301,7 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  max-width: 360px;
+  max-width: 400px;
   margin: 0 auto;
 }
 
@@ -233,6 +332,11 @@ button:disabled {
   border: 3px solid #8a7650;
 }
 
+.brett-valg button {
+  width: auto;
+  padding: 10px 14px;
+}
+
 .antall-valg button.valgt {
   background: #e8a317;
   border-color: #e8a317;
@@ -254,15 +358,100 @@ button:disabled {
 
 .museikon {
   width: 50px;
-  height: 32px;
+  height: 38px;
   flex-shrink: 0;
+}
+
+.navnerad input,
+.navnerad select {
+  padding: 10px;
+  font-size: 1rem;
+  border: 2px solid #8a7650;
+  border-radius: 8px;
+  background: #fff;
 }
 
 .navnerad input {
   flex: 1;
   min-width: 0;
-  padding: 10px;
-  font-size: 1rem;
-  border: 2px solid #8a7650;
-  border-radius: 8px;
+}
+
+.navnerad select {
+  flex-shrink: 0;
+  max-width: 130px;
+}
+
+/* ---------- Uten animasjoner ---------- */
+/* Har man slått av animasjoner i operativsystemet, står ting stille */
+@media (prefers-reduced-motion: reduce) {
+  .mus-kropp,
+  .terning.triller,
+  .reaksjon,
+  .katt-zzz,
+  .katt.sur .katt-kropp {
+    animation: none;
+  }
+
+  .maalfelt {
+    animation: none;
+    fill: #ffe08a;
+    stroke: #e8a317;
+  }
+}
+
+/* ---------- Telefon (smal skjerm) ---------- */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .topp {
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  main {
+    gap: 12px;
+  }
+
+  .brettramme,
+  #brett {
+    width: 100%;
+  }
+
+  aside {
+    width: 100%;
+    max-width: none;
+    gap: 12px;
+  }
+
+  /* Spillerne står ved siden av hverandre, så alt får plass under brettet */
+  .spillerliste {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .spillerliste li {
+    padding: 4px 8px;
+  }
+
+  .terning {
+    width: 72px;
+    height: 72px;
+    padding: 8px;
+  }
+
+  .terning .prikk {
+    width: 13px;
+    height: 13px;
+  }
+
+  .navnerad select {
+    max-width: 105px;
+    padding: 10px 4px;
+  }
 }
