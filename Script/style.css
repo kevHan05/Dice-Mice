@@ -27,8 +27,11 @@ main {
   gap: 24px;
 }
 
+/* Brettet tilpasser seg både bredden og høyden på skjermen,
+   så hele brettet synes uten å scrolle på PC */
 #brett {
-  width: min(90vw, 640px);
+  width: min(90vw, 640px, calc(100vh - 100px));
+  min-width: 280px;
   height: auto;
 }
 
@@ -59,6 +62,116 @@ aside {
   grid-template-rows: repeat(3, 1fr);
 }
 
+/* Terningen vipper frem og tilbake mens den ruller */
+.terning.triller {
+  animation: trille 0.2s linear infinite;
+}
+
+@keyframes trille {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-12deg); }
+  75%  { transform: rotate(12deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Musene beveger seg litt mens de står i ro */
+.mus-kropp {
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+  animation: pust 1.6s ease-in-out infinite;
+}
+
+.hopper .mus-kropp,
+.feirer .mus-kropp {
+  animation: none;
+}
+
+@keyframes pust {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-1.5px) rotate(-3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mus-kropp,
+  .terning.triller {
+    animation: none;
+  }
+}
+
+/* ---------- Spillerliste ---------- */
+.spillerliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spillerliste li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.spillerliste li.aktiv {
+  background: #fffaf0;
+  border-color: #e8a317;
+  font-weight: bold;
+}
+
+/* ---------- Telefon (smal skjerm) ---------- */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  h1 {
+    margin-bottom: 8px;
+    font-size: 1.6rem;
+  }
+
+  main {
+    gap: 12px;
+  }
+
+  #brett {
+    width: 100%;
+  }
+
+  aside {
+    width: 100%;
+    gap: 12px;
+  }
+
+  /* Spillerne står ved siden av hverandre, så alt får plass under brettet */
+  .spillerliste {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .spillerliste li {
+    padding: 4px 8px;
+  }
+
+  .terning {
+    width: 72px;
+    height: 72px;
+    padding: 8px;
+  }
+
+  .terning .prikk {
+    width: 13px;
+    height: 13px;
+  }
+}
+
 .prikk {
   width: 16px;
   height: 16px;
@@ -75,6 +188,7 @@ button {
   background: #e8a317;
   color: #fff;
   cursor: pointer;
+  touch-action: manipulation; /* trykk på telefon reagerer med en gang, uten zoom ved dobbelttrykk */
 }
 
 button:disabled {

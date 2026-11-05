@@ -15,6 +15,14 @@ const YTRE_RADIUS = 300;
 const INDRE_RADIUS = 95;
 const OMGANGER = 2.5;
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const HOPP_TID = 280;        // millisekunder for ett hopp fra felt til felt
+const HOPP_HOYDE = 18;       // hvor høyt musen hopper
+const TRILLE_TID = 700;      // millisekunder terningen ruller før den viser tallet
+const SALTO_TID = 700;       // millisekunder for én backflip
+const SALTO_PAUSE = 300;     // pause mellom hver backflip
+const SALTO_HOYDE = 45;      // hvor høyt vinnermusen hopper når den tar backflip
+const ANTALL_KONFETTI = 80;
+const KONFETTI_FARGER = ['#e8a317', '#7cc576', '#e89aa6', '#ffd54a', '#6fa8dc', '#d9534f'];
 
 // ---------- Tilstand ----------
 // Posisjon 0 = START, ANTALL_STEG = osten i midten
@@ -23,6 +31,8 @@ let posisjoner = [];
 let tur = 0;
 let ferdig = false;
 let antallValgt = 2;   // forhåndsvalgt på startskjermen
+let opptatt = false;   // sant mens terningen ruller eller musen hopper
+let museGrupper = [];  // SVG-gruppen til hver mus på brettet
 
 const startskjerm = document.getElementById('startskjerm');
 const antallValg = document.getElementById('antallValg');
@@ -33,6 +43,7 @@ const brett = document.getElementById('brett');
 const statusTekst = document.getElementById('status');
 const terning = document.getElementById('terning');
 const kastKnapp = document.getElementById('kast');
+const spillerliste = document.getElementById('spillerliste');
 
 // ---------- Hjelpefunksjoner ----------
 function lag(type, attributter = {}, forelder = null) {
@@ -133,17 +144,122 @@ function tegnMus(g, farge) {
 // Forskyvning når flere mus står på samme plass
 const FORSKYVNING = [[0, 0], [-10, -12], [10, 12], [-10, 12], [10, -12]];
 
+// Hvor mus nummer i skal stå (flyttes litt til siden hvis flere står på samme plass)
+function musePlass(i) {
+  const plass = plasser[posisjoner[i]];
+  const samme = posisjoner.filter((p) => p === posisjoner[i]).length;
+  const rekkefolge = posisjoner.slice(0, i).filter((p) => p === posisjoner[i]).length;
+  const [dx, dy] = samme > 1 ? FORSKYVNING[rekkefolge + 1] : FORSKYVNING[0];
+  return { x: plass.x + dx, y: plass.y + dy - 4 };
+}
+
 function tegnMusene() {
   const lagMus = document.getElementById('muselag');
   lagMus.innerHTML = '';
-  spillere.forEach((spiller, i) => {
-    const plass = plasser[posisjoner[i]];
-    const samme = posisjoner.filter((p) => p === posisjoner[i]).length;
-    const rekkefolge = posisjoner.slice(0, i).filter((p) => p === posisjoner[i]).length;
-    const [dx, dy] = samme > 1 ? FORSKYVNING[rekkefolge + 1] : FORSKYVNING[0];
-    const g = lag('g', { transform: `translate(${plass.x + dx} ${plass.y + dy - 4})` }, lagMus);
-    tegnMus(g, spiller.farge);
+  museGrupper = spillere.map((spiller, i) => {
+    const { x, y } = musePlass(i);
+    const g = lag('g', { transform: `translate(${x} ${y})` }, lagMus);
+    // Den indre gruppen beveger seg litt hele tiden (se .mus-kropp i style.css).
+    // Hver mus starter bevegelsen på ulikt tidspunkt, så de ikke beveger seg i takt.
+    const kropp = lag('g', { class: 'mus-kropp', style: `animation-delay: ${-i * 0.7}s` }, g);
+    tegnMus(kropp, spiller.farge);
+    return g;
   });
+}
+
+// Ett hopp i en bue fra ett punkt til et annet
+function hopp(g, fra, til) {
+  return new Promise((ferdigHopp) => {
+    const start = performance.now();
+    function ramme(naa) {
+      const t = Math.min((naa - start) / HOPP_TID, 1);
+      const x = fra.x + (til.x - fra.x) * t;
+      const y = fra.y + (til.y - fra.y) * t - Math.sin(t * Math.PI) * HOPP_HOYDE;
+      g.setAttribute('transform', `translate(${x} ${y})`);
+      if (t < 1) requestAnimationFrame(ramme);
+      else ferdigHopp();
+    }
+    requestAnimationFrame(ramme);
+  });
+}
+
+// Musen hopper felt for felt fremover
+async function flyttMus(i, antallHopp) {
+  const g = museGrupper[i];
+  g.parentNode.appendChild(g); // tegnes over de andre musene mens den hopper
+  g.classList.add('hopper');
+  let fra = musePlass(i);
+  for (let s = 0; s < antallHopp; s++) {
+    posisjoner[i]++;
+    const plass = plasser[posisjoner[i]];
+    const til = { x: plass.x, y: plass.y - 4 };
+    await hopp(g, fra, til);
+    fra = til;
+  }
+  tegnMusene(); // plasserer musene pent igjen hvis flere står på samme felt
+}
+
+// ---------- Seiersfeiring ----------
+// Vinnermusen tar backflip etter backflip ved osten, og konfetti faller over brettet
+function feirSeier(i) {
+  // Har man slått av animasjoner i operativsystemet, vises bare seiersteksten
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const g = museGrupper[i];
+  g.parentNode.appendChild(g); // vinneren tegnes over de andre musene
+  g.classList.add('feirer');
+  const { x, y } = musePlass(i);
+  const start = performance.now();
+
+  function ramme(naa) {
+    const tid = (naa - start) % (SALTO_TID + SALTO_PAUSE);
+    const t = Math.min(tid / SALTO_TID, 1);
+    const hoyde = Math.sin(t * Math.PI) * SALTO_HOYDE;
+    // Musen ser mot høyre, så en backflip er å rulle bakover (mot klokka)
+    const vinkel = -360 * (1 - Math.cos(t * Math.PI)) / 2;
+    g.setAttribute('transform', `translate(${x} ${y - hoyde}) rotate(${vinkel})`);
+    requestAnimationFrame(ramme);
+  }
+  requestAnimationFrame(ramme);
+
+  slippKonfetti();
+}
+
+function slippKonfetti() {
+  const konfettilag = lag('g', { 'aria-hidden': 'true' }, brett);
+  const biter = [];
+  for (let k = 0; k < ANTALL_KONFETTI; k++) {
+    biter.push({
+      el: lag('rect', {
+        x: -5, y: -2.5, width: 10, height: 5, rx: 1,
+        fill: KONFETTI_FARGER[k % KONFETTI_FARGER.length],
+      }, konfettilag),
+      x: Math.random() * 700,
+      y: -40 - Math.random() * 600,           // starter over brettet, til litt ulik tid
+      fart: 120 + Math.random() * 120,         // piksler per sekund
+      vinkel: Math.random() * 360,
+      spinn: (Math.random() - 0.5) * 720,      // grader per sekund
+      svai: Math.random() * Math.PI * 2,       // vugger fra side til side
+    });
+  }
+
+  let forrige = performance.now();
+  function ramme(naa) {
+    const dt = (naa - forrige) / 1000;
+    forrige = naa;
+    let igjen = 0;
+    for (const b of biter) {
+      b.y += b.fart * dt;
+      b.vinkel += b.spinn * dt;
+      b.svai += dt * 3;
+      const bx = b.x + Math.sin(b.svai) * 15;
+      b.el.setAttribute('transform', `translate(${bx} ${b.y}) rotate(${b.vinkel})`);
+      if (b.y < 720) igjen++;
+    }
+    if (igjen) requestAnimationFrame(ramme);
+    else konfettilag.remove(); // all konfettien har falt ut av brettet
+  }
+  requestAnimationFrame(ramme);
 }
 
 // Prikkplassering i et 3 x 3 rutenett (0–8) for hvert terningkast
@@ -162,28 +278,74 @@ function visTerning(verdi) {
   terning.setAttribute('aria-label', verdi ? `Terningen viser ${verdi}` : 'Terningen');
 }
 
+// Terningen ruller og viser tilfeldige tall en liten stund
+function trillTerning() {
+  return new Promise((ferdigTrilla) => {
+    terning.classList.add('triller');
+    const bytt = setInterval(() => visTerning(1 + Math.floor(Math.random() * 6)), 80);
+    setTimeout(() => {
+      clearInterval(bytt);
+      terning.classList.remove('triller');
+      ferdigTrilla();
+    }, TRILLE_TID);
+  });
+}
+
+// En liten mus-tegning til startskjermen og spillerlisten
+function lagMuseikon(farge) {
+  const ikon = document.createElementNS(SVG_NS, 'svg');
+  ikon.setAttribute('viewBox', '-32 -20 60 36');
+  ikon.setAttribute('class', 'museikon');
+  ikon.setAttribute('aria-hidden', 'true');
+  tegnMus(ikon, farge);
+  return ikon;
+}
+
+// Viser hvem som er med, og hvem sin tur det er
+function visSpillerliste() {
+  spillerliste.innerHTML = '';
+  spillere.forEach((spiller, i) => {
+    const rad = document.createElement('li');
+    const navn = document.createElement('span');
+    navn.textContent = spiller.navn;
+    rad.append(lagMuseikon(spiller.farge), navn);
+    if (i === tur) {
+      rad.classList.add('aktiv');
+      rad.setAttribute('aria-current', 'true');
+    }
+    spillerliste.appendChild(rad);
+  });
+}
+
 function oppdaterStatus() {
   statusTekst.textContent = `${spillere[tur].navn} sin tur`;
+  visSpillerliste();
 }
 
 // ---------- Spillogikk ----------
-function kastTerning() {
-  if (ferdig) return;
+async function kastTerning() {
+  if (ferdig || opptatt) return;
+  opptatt = true;
+  kastKnapp.disabled = true;
+
   const kast = 1 + Math.floor(Math.random() * 6);
+  await trillTerning();
   visTerning(kast);
 
-  posisjoner[tur] = Math.min(posisjoner[tur] + kast, ANTALL_STEG);
-  tegnMusene();
+  const antallHopp = Math.min(kast, ANTALL_STEG - posisjoner[tur]);
+  await flyttMus(tur, antallHopp);
+  opptatt = false;
 
   if (posisjoner[tur] === ANTALL_STEG) {
     ferdig = true;
-    kastKnapp.disabled = true;
     statusTekst.textContent = `${spillere[tur].navn} kom først til osten og vant!`;
+    feirSeier(tur);
     return;
   }
 
   tur = (tur + 1) % spillere.length;
   oppdaterStatus();
+  kastKnapp.disabled = false;
 }
 
 // ---------- Startskjerm ----------
@@ -196,10 +358,7 @@ function visNavnefelt() {
     const rad = document.createElement('label');
     rad.className = 'navnerad';
 
-    const ikon = document.createElementNS(SVG_NS, 'svg');
-    ikon.setAttribute('viewBox', '-32 -20 60 36');
-    ikon.setAttribute('class', 'museikon');
-    tegnMus(ikon, MUSER[i].farge);
+    const ikon = lagMuseikon(MUSER[i].farge);
 
     const felt = document.createElement('input');
     felt.type = 'text';
@@ -227,6 +386,8 @@ function startSpillet(hendelse) {
   posisjoner = spillere.map(() => 0);
   tur = 0;
   ferdig = false;
+  opptatt = false;
+  kastKnapp.disabled = false;
 
   startskjerm.hidden = true;
   spillet.hidden = false;
