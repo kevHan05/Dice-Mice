@@ -22,6 +22,7 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `Script/style.css` – utseende
 - `Script/game.js` – brett, mus, ost, terning, spillogikk og lyd
 - `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
+- `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave: issue → branch (`<N>-<kort-beskrivelse>`) → commit (`<issue-tittel> #<N>`) → push → PR med `Closes #<N>` → merge
 
 Git: `https://github.com/kevHan05/Dice-Mice.git`, gren `main`.
 
