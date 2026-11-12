@@ -21,7 +21,7 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `Script/index.html` – siden
 - `Script/style.css` – utseende
 - `Script/game.js` – brett, mus, ost, terning, spillogikk og lyd
-- `Script/musikk.mp3` – bakgrunnsmusikk (finnes ikke ennå; legg SUNO-sangen her med dette navnet)
+- `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
 
 Git: `https://github.com/kevHan05/Dice-Mice.git`, gren `main`.
 
@@ -74,7 +74,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - Emoji-reaksjoner: 👍 😂 😮 😢 🧀 🎉 under terningen. Emojien flyter opp over brettet.
 - Bakgrunn: rolige «ostehull» i litt mørkere beige, og en rund lys brettplate under spiralen. Fargene er de samme som før.
 - Lydeffekter lages i nettleseren (Web Audio), uten lydfiler: terningen høres ut som en ekte terning som ruller (klakk som blir glissere, og et dunk når den stopper), musen sier «boing» når den hopper, egne lyder for spesialfeltene, og en fanfare ved seier. Knappen «🔊 Lyd på/av» øverst skrur dem av og på.
-- Musikk-knappen (🎵) vises bare når `Script/musikk.mp3` finnes. Musikken er av til man trykker på knappen, og går i loop.
+- Musikken (`assets/audio/tema.mp3`) starter når man trykker «Start spillet», og går i loop. Musikk-knappen (🎵) skrur den av og på. Har man skrudd den av med knappen, starter den ikke av seg selv igjen. En volumskyver ved siden av knappen styrer hvor høyt musikken spiller (0,4 fra start). Knappen og skyveren vises bare når sangfilen finnes.
 
 ## Faser
 
@@ -115,7 +115,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - Etter spillet: valg mellom «Spill igjen» (samme spillere) og «Tilbake til lobby». *(Laget.)*
 - Dekorere musene. *(Laget.)*
 - Bakgrunn. *(Laget.)*
-- Musikk (SUNO). *(Avspillingen er laget. Selve sangen mangler: lag den i SUNO og lagre den som `Script/musikk.mp3`.)*
+- Musikk (SUNO). *(Laget. Sangen ligger i `assets/audio/tema.mp3`.)*
 - Lydeffekter. *(Laget.)*
 
 ## Fase 4: Justeringer

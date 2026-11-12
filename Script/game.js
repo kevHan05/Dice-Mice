@@ -97,6 +97,8 @@ const spillIgjenKnapp = document.getElementById('spillIgjen');
 const lobbyKnapp = document.getElementById('tilLobby');
 const lydKnapp = document.getElementById('lydKnapp');
 const musikkKnapp = document.getElementById('musikkKnapp');
+const volumValg = document.getElementById('volumValg');
+const volumSlider = document.getElementById('volum');
 
 // ---------- Hjelpefunksjoner ----------
 function lag(type, attributter = {}, forelder = null) {
@@ -273,14 +275,24 @@ const lyd = {
     tone(f, i * 0.15, i === 3 ? 0.6 : 0.18, { type: 'triangle', volum: 0.25 })),
 };
 
-// Musikk: legg en sang (f.eks. fra SUNO) i Script-mappen med navnet musikk.mp3.
-// Musikk-knappen vises bare når filen finnes.
+// Musikk: sangen ligger i assets/audio/tema.mp3 (stien er regnet fra Script-mappen).
+// Musikk-knappen og volumet vises bare når filen finnes.
 const musikk = new Audio();
 musikk.loop = true;
-musikk.volume = 0.4;
+musikk.volume = Number(volumSlider.value);
 musikk.preload = 'auto';
-musikk.addEventListener('canplay', () => { musikkKnapp.hidden = false; }, { once: true });
-musikk.src = 'musikk.mp3';
+musikk.addEventListener('canplay', () => {
+  musikkKnapp.hidden = false;
+  volumValg.hidden = false;
+}, { once: true });
+musikk.src = '../assets/audio/tema.mp3';
+let musikkValgt = false; // sant når spilleren selv har trykket på musikk-knappen
+
+function spillMusikk() {
+  musikkPaa = true;
+  musikk.play().catch(() => {});
+  oppdaterLydKnapper();
+}
 
 function oppdaterLydKnapper() {
   lydKnapp.textContent = lydPaa ? '🔊 Lyd på' : '🔇 Lyd av';
@@ -856,6 +868,8 @@ function startSpillet(hendelse) {
     farge: MUSER[i].farge,
     pynt: rad.querySelector('select').value,
   }));
+  // Musikken starter når spillet starter, hvis ingen har skrudd den av med knappen
+  if (!musikkValgt && !musikkPaa) spillMusikk();
   startNyttSpill();
 }
 
@@ -925,10 +939,18 @@ lydKnapp.addEventListener('click', () => {
 });
 
 musikkKnapp.addEventListener('click', () => {
-  musikkPaa = !musikkPaa;
-  if (musikkPaa) musikk.play().catch(() => {});
-  else musikk.pause();
-  oppdaterLydKnapper();
+  musikkValgt = true;
+  if (musikkPaa) {
+    musikkPaa = false;
+    musikk.pause();
+    oppdaterLydKnapper();
+  } else {
+    spillMusikk();
+  }
+});
+
+volumSlider.addEventListener('input', () => {
+  musikk.volume = Number(volumSlider.value);
 });
 
 visNavnefelt();
