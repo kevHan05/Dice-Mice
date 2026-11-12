@@ -40,7 +40,21 @@ h2 {
 
 .lydknapper {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 8px;
+}
+
+.volum-valg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.volum-valg input {
+  width: 110px;
 }
 
 button {

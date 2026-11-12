@@ -11,8 +11,12 @@
     <h1>Dice-Mice!</h1>
     <div class="lydknapper">
       <button type="button" id="lydKnapp" class="liten-knapp" aria-pressed="true">🔊 Lyd på</button>
-      <!-- Vises bare når Script/musikk.mp3 finnes -->
+      <!-- Musikk-knappen og volumet vises bare når assets/audio/tema.mp3 finnes -->
       <button type="button" id="musikkKnapp" class="liten-knapp" aria-pressed="false" hidden>🎵 Musikk av</button>
+      <span id="volumValg" class="volum-valg" hidden>
+        <label for="volum">Volum</label>
+        <input type="range" id="volum" min="0" max="1" step="0.05" value="0.4">
+      </span>
     </div>
   </header>
 
