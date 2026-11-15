@@ -14,13 +14,13 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 
 ## Kjøre spillet
 
-Åpne `docs/index.html` i nettleseren. Ingen installasjon trengs.
+Åpne `index.html` i rotmappen i nettleseren. Ingen installasjon trengs.
 
 ## Filer
 
-- `docs/index.html` – siden
-- `docs/style.css` – utseende
-- `docs/game.js` – brett, mus, ost, terning, spillogikk og lyd
+- `index.html` – siden
+- `style.css` – utseende
+- `game.js` – brett, mus, ost, terning, spillogikk og lyd
 - `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
 - `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave: issue → branch (`<N>-<kort-beskrivelse>`) → commit (`<issue-tittel> #<N>`) → push → PR med `Closes #<N>` → merge
 
@@ -84,6 +84,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Fase 3: Innhold og lyd – laget, venter på sjekk.** Alt fra den gamle «Senere»-listen, unntatt å spille over nettet. Se under.
 - **Fase 4: Justeringer – laget, venter på sjekk.** Se under.
 - **Fase 5: Sidepanelet – laget, venter på sjekk** (issue #7). Se under.
+- **Spillet til rotmappen – laget, venter på sjekk** (issue #9). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -127,7 +128,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 
 ## Fase 5: Sidepanelet
 
-Sidepanelet (`<aside>` ved siden av brettet) skal bli mindre kjedelig. Behold fargene og stilen spillet har nå (beige, oransje, ost-gul). Brettet, musene og spillogikken endres ikke – bare utseendet på sidepanelet, mest i `docs/style.css`.
+Sidepanelet (`<aside>` ved siden av brettet) skal bli mindre kjedelig. Behold fargene og stilen spillet har nå (beige, oransje, ost-gul). Brettet, musene og spillogikken endres ikke – bare utseendet på sidepanelet, mest i `style.css`.
 
 - Panelet: alt ligger i et eget kort med lys bakgrunn, runde hjørner og en myk kant/skygge, så det skiller seg fra bakgrunnen med ostehull. *(Laget.)*
 - Spillerlisten: hver spiller er en avrundet «pille» med musikonet i en liten sirkel i musens farge. *(Laget.)*
@@ -150,6 +151,16 @@ Valg jeg (Claude) tok underveis:
 - Hover-effektene (løft og vekst) gjelder bare på enheter med mus, så de ikke «henger igjen» på telefon.
 - Når «Kast terningen» er deaktivert, er den grå, flat og står litt lavere, som om den er trykket ned.
 - På telefon er pillene litt mindre og står i rader under brettet.
+
+## Spillet til rotmappen (GitHub Pages)
+
+Spillet flyttes fra `docs/` til rotmappen, så GitHub Pages kan publisere fra roten og musikken i `assets/` blir med. (Publiserer Pages fra `docs/`, kommer man ikke til `assets/`, og musikken mangler på nettsiden.)
+
+- Flytt `docs/index.html`, `docs/style.css` og `docs/game.js` til rotmappen med `git mv`, og slett den tomme `docs/`-mappen. *(Laget.)*
+- Endre stien til musikken i `game.js` fra `'../assets/audio/tema.mp3'` til `'assets/audio/tema.mp3'`, og oppdater kommentaren over. *(Laget.)*
+- Sjekk at de andre stiene i `index.html` og `game.js` fortsatt stemmer. *(Laget. `style.css` og `game.js` ligger ved siden av `index.html`, og musikken er den eneste lydfilen – de andre lydene lages i nettleseren.)*
+- Oppdater stiene i denne filen og i `.claude/skills/github-flyt/SKILL.md`. *(Laget.)*
+- Etter merge: sett GitHub Pages til å publisere fra roten (Settings → Pages → Branch `main`, mappe `/ (root)`).
 
 ## Senere (ikke lag før jeg ber om det)
 

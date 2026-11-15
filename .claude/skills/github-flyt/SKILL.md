@@ -40,7 +40,7 @@ git branch
 `git pull` før ny branch er lett å glemme — ta det alltid med. `git branch` bekrefter at stjernen står ved den nye branchen.
 
 ## 3. Endringen
-Hjelp med selve koden. Prosjektets filer ligger i `docs/` (`game.js`, `index.html`, `style.css`), og lyd i `assets/audio/`.
+Hjelp med selve koden. Prosjektets filer ligger i rotmappen (`index.html`, `style.css`, `game.js`), og lyd i `assets/audio/`.
 
 ## 4. Commit
 ```bash

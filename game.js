@@ -275,7 +275,7 @@ const lyd = {
     tone(f, i * 0.15, i === 3 ? 0.6 : 0.18, { type: 'triangle', volum: 0.25 })),
 };
 
-// Musikk: sangen ligger i assets/audio/tema.mp3 (stien er regnet fra docs-mappen).
+// Musikk: sangen ligger i assets/audio/tema.mp3 (stien er regnet fra rotmappen, der index.html ligger).
 // Musikk-knappen og volumet vises bare når filen finnes.
 const musikk = new Audio();
 musikk.loop = true;
@@ -285,7 +285,7 @@ musikk.addEventListener('canplay', () => {
   musikkKnapp.hidden = false;
   volumValg.hidden = false;
 }, { once: true });
-musikk.src = '../assets/audio/tema.mp3';
+musikk.src = 'assets/audio/tema.mp3';
 let musikkValgt = false; // sant når spilleren selv har trykket på musikk-knappen
 
 function spillMusikk() {
