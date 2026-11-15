@@ -85,6 +85,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Fase 4: Justeringer – laget, venter på sjekk.** Se under.
 - **Fase 5: Sidepanelet – laget, venter på sjekk** (issue #7). Se under.
 - **Spillet til rotmappen – laget, venter på sjekk** (issue #9). Se under.
+- **Fast «Kast terningen»-knapp – laget, venter på sjekk** (issue #11). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -161,6 +162,13 @@ Spillet flyttes fra `docs/` til rotmappen, så GitHub Pages kan publisere fra ro
 - Sjekk at de andre stiene i `index.html` og `game.js` fortsatt stemmer. *(Laget. `style.css` og `game.js` ligger ved siden av `index.html`, og musikken er den eneste lydfilen – de andre lydene lages i nettleseren.)*
 - Oppdater stiene i denne filen og i `.claude/skills/github-flyt/SKILL.md`. *(Laget.)*
 - Etter merge: sett GitHub Pages til å publisere fra roten (Settings → Pages → Branch `main`, mappe `/ (root)`).
+
+## Fast «Kast terningen»-knapp
+
+«Kast terningen»-knappen flyttet seg når snakkeboblen dukket opp eller forsvant (opptil ca. 100 px), så den var vanskelig å treffe.
+
+- Snakkeboblen får en fast plass i sidepanelet (112 px høy), så terningen, knappen og emoji-knappene under står stille – med og uten boble, og også med de lengste tekstene (katten + sekser). *(Laget. Målt: knappen står på samme sted på PC, telefon og smal telefon på 320 px.)*
+- Boblen ser ut som før (farger, spiss, popp-inn). Når den er tom, er plassen tom. *(Laget.)*
 
 ## Senere (ikke lag før jeg ber om det)
 

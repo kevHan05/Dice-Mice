@@ -51,7 +51,10 @@
     <aside>
       <ul id="spillerliste" class="spillerliste" aria-label="Spillere"></ul>
       <p id="status"></p>
-      <p id="hendelse" class="hendelse" aria-live="polite"></p>
+      <!-- Fast plass til snakkeboblen, så knappene under ikke flytter seg -->
+      <div class="hendelse-plass">
+        <p id="hendelse" class="hendelse" aria-live="polite"></p>
+      </div>
       <div id="terning" class="terning" aria-live="polite"></div>
       <button id="kast">Kast terningen</button>
       <button id="tilPallen" type="button" hidden>Se pallen 🏆</button>

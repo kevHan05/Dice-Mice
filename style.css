@@ -146,12 +146,23 @@ aside {
   border: 2px solid #333;
 }
 
+/* Fast plass til snakkeboblen: like høy med og uten boble, så terningen og
+   «Kast terningen» under aldri flytter seg. Høy nok til den lengste teksten
+   (katten + sekser, 4 linjer, ca. 109 px). */
+.hendelse-plass {
+  width: 100%;
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Hva som skjedde på et spesialfelt: en snakkeboble med farge etter hva som skjedde */
 .hendelse {
   --boble-bakgrunn: #fff3c4;
   --boble-kant: #e8a317;
   position: relative;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 10px 14px;
   background: var(--boble-bakgrunn);
   border: 2px solid var(--boble-kant);
