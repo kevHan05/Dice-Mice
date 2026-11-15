@@ -275,7 +275,7 @@ const lyd = {
     tone(f, i * 0.15, i === 3 ? 0.6 : 0.18, { type: 'triangle', volum: 0.25 })),
 };
 
-// Musikk: sangen ligger i assets/audio/tema.mp3 (stien er regnet fra Script-mappen).
+// Musikk: sangen ligger i assets/audio/tema.mp3 (stien er regnet fra docs-mappen).
 // Musikk-knappen og volumet vises bare når filen finnes.
 const musikk = new Audio();
 musikk.loop = true;

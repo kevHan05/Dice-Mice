@@ -14,13 +14,13 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 
 ## Kjøre spillet
 
-Åpne `Script/index.html` i nettleseren. Ingen installasjon trengs.
+Åpne `docs/index.html` i nettleseren. Ingen installasjon trengs.
 
 ## Filer
 
-- `Script/index.html` – siden
-- `Script/style.css` – utseende
-- `Script/game.js` – brett, mus, ost, terning, spillogikk og lyd
+- `docs/index.html` – siden
+- `docs/style.css` – utseende
+- `docs/game.js` – brett, mus, ost, terning, spillogikk og lyd
 - `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
 - `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave: issue → branch (`<N>-<kort-beskrivelse>`) → commit (`<issue-tittel> #<N>`) → push → PR med `Closes #<N>` → merge
 
