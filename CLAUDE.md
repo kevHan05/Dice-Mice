@@ -83,6 +83,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Fase 2: Animasjon og UI – ferdig.**
 - **Fase 3: Innhold og lyd – laget, venter på sjekk.** Alt fra den gamle «Senere»-listen, unntatt å spille over nettet. Se under.
 - **Fase 4: Justeringer – laget, venter på sjekk.** Se under.
+- **Fase 5: Sidepanelet – laget, venter på sjekk** (issue #7). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -123,6 +124,32 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 
 - Slår man 6, får man kaste igjen. Gjelder hver gang man slår 6. *(Laget.)*
 - Kattefeltet byttes ut: i stedet for 💤-ikonet ligger det en katt ved siden av feltet og sover. Lander man der, våkner katten og blir sur. Straffen er den samme som før: man står over neste runde. *(Laget.)*
+
+## Fase 5: Sidepanelet
+
+Sidepanelet (`<aside>` ved siden av brettet) skal bli mindre kjedelig. Behold fargene og stilen spillet har nå (beige, oransje, ost-gul). Brettet, musene og spillogikken endres ikke – bare utseendet på sidepanelet, mest i `docs/style.css`.
+
+- Panelet: alt ligger i et eget kort med lys bakgrunn, runde hjørner og en myk kant/skygge, så det skiller seg fra bakgrunnen med ostehull. *(Laget.)*
+- Spillerlisten: hver spiller er en avrundet «pille» med musikonet i en liten sirkel i musens farge. *(Laget.)*
+- Den som har tur: oransje bakgrunn, litt større, fet tekst og en liten «🎲 Din tur»-merkelapp. Når turen bytter, spretter den nye spilleren litt inn. *(Laget.)*
+- Spillere som står over en runde (katten) får et lite 💤-merke og blir litt gjennomsiktige. *(Laget.)*
+- Statusteksten: større og tydeligere, med en prikk i fargen til musen som har tur. *(Laget.)*
+- Hendelsesteksten: en snakkeboble med farge etter hva som skjedde – grønn for ⏩, rød for ⏪, gul for 🎲, blå for katten. Den popper inn når den dukker opp. Tom boble vises ikke. *(Laget.)*
+- Terningen: mer «tegneserie» – litt tykkere kant, en hard skygge rett under (som om den står på bordet) og litt runde hjørner. Den vipper litt mens den ruller. *(Laget.)*
+- Knappene «Kast terningen» og «Se pallen»: «tykke» knapper med en mørkere kant i bunnen, som en 3D-knapp. De løfter seg litt ved hover og trykkes ned ved klikk. Deaktivert: grå og flat. *(Laget.)*
+- Emoji-knappene: runde, blir litt større ved hover og spretter når man trykker. *(Laget.)*
+- Skal se bra ut både på telefon og PC. Bare CSS-animasjoner. Med prefers-reduced-motion er sprett og vipp av. *(Laget.)*
+
+Valg jeg (Claude) tok underveis:
+
+- Sirkelen rundt musikonet er en lys utgave av musens farge med kant i musens farge, så musen synes. Den hvite musen får i tillegg en tynn brun kant.
+- 💤-merket vises fra musen lander på kattefeltet til den har stått over runden sin.
+- Teksten i snakkeboblen er fet og litt mørkere, så den er lett å lese.
+- Snakkeboblen har en liten spiss som peker opp mot statusteksten. Skjer to ting samtidig (f.eks. katten og en sekser), bestemmer det første fargen.
+- Når turen bytter, spretter den nye spilleren. Den spretter ikke igjen når samme spiller kaster på nytt (sekser eller 🎲).
+- Hover-effektene (løft og vekst) gjelder bare på enheter med mus, så de ikke «henger igjen» på telefon.
+- Når «Kast terningen» er deaktivert, er den grå, flat og står litt lavere, som om den er trykket ned.
+- På telefon er pillene litt mindre og står i rader under brettet.
 
 ## Senere (ikke lag før jeg ber om det)
 

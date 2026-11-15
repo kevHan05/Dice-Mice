@@ -638,24 +638,51 @@ function trillTerning() {
   });
 }
 
-// Viser hvem som er med, og hvem sin tur det er
+// Viser hvem som er med, og hvem sin tur det er.
+// Bare utseende: musikonet i en sirkel i musens farge, «Din tur»-merkelapp og 💤 for den som står over.
+let sistVisteTur = -1;  // brukes så den nye spilleren bare spretter inn når turen faktisk bytter
+
 function visSpillerliste() {
   spillerliste.innerHTML = '';
   spillere.forEach((spiller, i) => {
     const rad = document.createElement('li');
+    rad.style.setProperty('--musefarge', spiller.farge);
+
+    const ikon = document.createElement('span');
+    ikon.className = 'spiller-ikon';
+    ikon.append(lagMuseikon(spiller.farge, spiller.pynt));
+
     const navn = document.createElement('span');
+    navn.className = 'spiller-navn';
     navn.textContent = spiller.navn;
-    rad.append(lagMuseikon(spiller.farge, spiller.pynt), navn);
+    rad.append(ikon, navn);
+
+    if (staOver[i]) {
+      rad.classList.add('staar-over');
+      const merke = document.createElement('span');
+      merke.className = 'merke-over';
+      merke.textContent = '💤';
+      merke.title = 'Står over neste runde';
+      rad.append(merke);
+    }
     if (i === tur) {
       rad.classList.add('aktiv');
       rad.setAttribute('aria-current', 'true');
+      if (tur !== sistVisteTur) rad.classList.add('sprett');
+      const merkelapp = document.createElement('span');
+      merkelapp.className = 'din-tur';
+      merkelapp.setAttribute('aria-hidden', 'true');
+      merkelapp.textContent = '🎲 Din tur';
+      rad.append(merkelapp);
     }
     spillerliste.appendChild(rad);
   });
+  sistVisteTur = tur;
 }
 
 function oppdaterStatus() {
   statusTekst.textContent = `${spillere[tur].navn} sin tur`;
+  statusTekst.style.setProperty('--turfarge', spillere[tur].farge); // fargen på prikken foran teksten
   visSpillerliste();
 }
 
@@ -672,16 +699,23 @@ function nesteTur() {
   }
 }
 
-// Legger en ny linje til teksten om hva som skjedde
-function leggTilHendelse(tekst) {
+// Legger en ny linje til teksten om hva som skjedde.
+// Typen (frem, tilbake, igjen, over) gir snakkeboblen farge; den første hendelsen bestemmer fargen.
+function leggTilHendelse(tekst, type) {
   hendelseTekst.textContent = [hendelseTekst.textContent, tekst].join(' ').trim();
+  if (!hendelseTekst.dataset.type) hendelseTekst.dataset.type = type;
+}
+
+function tomHendelse() {
+  hendelseTekst.textContent = '';
+  delete hendelseTekst.dataset.type;
 }
 
 async function kastTerning() {
   if (ferdig || opptatt) return;
   opptatt = true;
   kastKnapp.disabled = true;
-  hendelseTekst.textContent = '';
+  tomHendelse();
 
   const kast = 1 + Math.floor(Math.random() * 6);
   await trillTerning();
@@ -693,7 +727,7 @@ async function kastTerning() {
   const type = spesial[posisjoner[tur]];
   let kastIgjen = false;
   if (type) {
-    hendelseTekst.textContent = `${SPESIALFELT[type].ikon} ${SPESIALFELT[type].tekst(navn)}`;
+    leggTilHendelse(`${SPESIALFELT[type].ikon} ${SPESIALFELT[type].tekst(navn)}`, type);
     lyd[type]();
     if (type === 'frem') {
       await flyttMus(tur, Math.min(SPESIAL_STEG, antallSteg - posisjoner[tur]));
@@ -710,7 +744,7 @@ async function kastTerning() {
   // Slår man 6, får man kaste igjen (hver gang)
   if (kast === 6 && !kastIgjen && posisjoner[tur] < antallSteg) {
     kastIgjen = true;
-    leggTilHendelse(`🎲 ${navn} slo 6 og kaster igjen!`);
+    leggTilHendelse(`🎲 ${navn} slo 6 og kaster igjen!`, 'igjen');
     lyd.igjen();
   }
   opptatt = false;
@@ -726,7 +760,7 @@ async function kastTerning() {
   }
 
   if (!kastIgjen) {
-    nesteTur().forEach((n) => leggTilHendelse(`😾 ${n} står over denne runden.`));
+    nesteTur().forEach((n) => leggTilHendelse(`😾 ${n} står over denne runden.`, 'over'));
   }
   oppdaterStatus();
   kastKnapp.disabled = false;
@@ -890,7 +924,8 @@ function startNyttSpill() {
   kastKnapp.disabled = false;
   kastKnapp.hidden = false;
   pallKnapp.hidden = true;
-  hendelseTekst.textContent = '';
+  tomHendelse();
+  sistVisteTur = -1; // den første spilleren spretter inn når spillet starter
 
   startskjerm.hidden = true;
   resultat.hidden = true;
@@ -929,7 +964,15 @@ REAKSJONER.forEach((emoji) => {
   knapp.className = 'emoji-knapp';
   knapp.textContent = emoji;
   knapp.setAttribute('aria-label', `Send ${emoji}`);
-  knapp.addEventListener('click', () => sendReaksjon(emoji));
+  knapp.addEventListener('click', () => {
+    sendReaksjon(emoji);
+    // Knappen spretter (se .emoji-knapp.sprett i style.css). Klassen tas av og på igjen,
+    // så den spretter på nytt selv om man trykker flere ganger fort.
+    knapp.classList.remove('sprett');
+    void knapp.offsetWidth;
+    knapp.classList.add('sprett');
+  });
+  knapp.addEventListener('animationend', () => knapp.classList.remove('sprett'));
   reaksjoner.appendChild(knapp);
 });
 
