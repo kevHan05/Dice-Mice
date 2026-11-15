@@ -108,25 +108,123 @@ main {
   height: auto;
 }
 
+/* ---------- Sidepanelet ---------- */
+/* Panelet er et eget kort, så det skiller seg fra bakgrunnen med ostehull */
 aside {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  min-width: 200px;
-  max-width: 340px;
+  gap: 14px;
+  min-width: 220px;
+  max-width: 350px;
+  padding: 18px 16px 20px;
+  background: #fffaf0;
+  border: 3px solid #e6d7b5;
+  border-radius: 22px;
+  box-shadow: 0 8px 20px rgba(138, 118, 80, 0.18);
 }
 
+/* Statusteksten, med en prikk i fargen til musen som har tur */
 #status {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #4a3b1f;
 }
 
-/* Hva som skjedde på et spesialfelt */
+#status::before {
+  content: '';
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--turfarge, #e8a317);
+  border: 2px solid #333;
+}
+
+/* Hva som skjedde på et spesialfelt: en snakkeboble med farge etter hva som skjedde */
 .hendelse {
-  margin: 0;
-  min-height: 1.4em;
+  --boble-bakgrunn: #fff3c4;
+  --boble-kant: #e8a317;
+  position: relative;
+  margin: 4px 0 0;
+  padding: 10px 14px;
+  background: var(--boble-bakgrunn);
+  border: 2px solid var(--boble-kant);
+  border-radius: 16px;
+  font-size: 0.98rem;
+  font-weight: 700; /* tykkere skrift, så teksten er lettere å lese */
+  line-height: 1.35;
+  color: #3a2f1a;
+  animation: popp-inn 0.3s ease-out;
+}
+
+/* Den lille spissen på boblen, som peker opp mot statusteksten */
+.hendelse::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: var(--boble-bakgrunn);
+  border-top: 2px solid var(--boble-kant);
+  border-left: 2px solid var(--boble-kant);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.hendelse:empty {
+  display: none;
+}
+
+.hendelse[data-type="frem"]    { --boble-bakgrunn: #e3f4dc; --boble-kant: #7cc576; }
+.hendelse[data-type="tilbake"] { --boble-bakgrunn: #fbe1e1; --boble-kant: #e08585; }
+.hendelse[data-type="igjen"]   { --boble-bakgrunn: #fff3c4; --boble-kant: #e8a317; }
+.hendelse[data-type="over"]    { --boble-bakgrunn: #e3ebf8; --boble-kant: #8aa6d6; }
+
+@keyframes popp-inn {
+  0%   { opacity: 0; transform: scale(0.7); }
+  70%  { opacity: 1; transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* «Kast terningen» og «Se pallen»: tykke 3D-knapper med mørkere kant i bunnen */
+#kast,
+#tilPallen {
+  padding: 14px 30px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  border-radius: 16px;
+  background: #e8a317;
+  box-shadow: 0 6px 0 #b07a10;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+/* Løfter seg ved hover (bare på enheter med mus, så den ikke «henger» på telefon) */
+@media (hover: hover) {
+  #kast:hover:not(:disabled),
+  #tilPallen:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #b07a10;
+  }
+}
+
+/* Trykkes ned ved klikk */
+#kast:active:not(:disabled),
+#tilPallen:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #b07a10;
+}
+
+/* Deaktivert: grå og flat */
+#kast:disabled {
+  background: #bbb;
+  box-shadow: none;
+  transform: translateY(6px);
 }
 
 /* Feltet musen skal til, lyser opp før den hopper */
@@ -140,13 +238,17 @@ aside {
 
 /* ---------- Terning ---------- */
 /* Terningen: 3 x 3 rutenett der prikkene plasseres */
+/* «Tegneserie»-terning: tykk kant, runde hjørner og en hard skygge rett under,
+   som om den står på bordet */
 .terning {
   width: 90px;
   height: 90px;
   padding: 10px;
+  margin-bottom: 6px;
   background: #fff;
-  border: 3px solid #333;
-  border-radius: 14px;
+  border: 4px solid #333;
+  border-radius: 18px;
+  box-shadow: 0 6px 0 #333;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
@@ -166,10 +268,10 @@ aside {
 }
 
 @keyframes trille {
-  0%   { transform: rotate(0deg); }
-  25%  { transform: rotate(-12deg); }
-  75%  { transform: rotate(12deg); }
-  100% { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg) translateY(0); }
+  25%  { transform: rotate(-12deg) translateY(-4px); }
+  75%  { transform: rotate(12deg) translateY(-4px); }
+  100% { transform: rotate(0deg) translateY(0); }
 }
 
 /* ---------- Musene ---------- */
@@ -242,20 +344,90 @@ aside {
   gap: 6px;
 }
 
+/* Hver spiller er en avrundet «pille» */
 .spillerliste li {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
-  border: 3px solid transparent;
-  border-radius: 10px;
+  padding: 4px 12px 4px 4px;
+  background: #f7eedb;
+  border: 2px solid #e6d7b5;
+  border-radius: 999px;
   text-align: left;
+  transition: opacity 0.2s ease;
 }
 
+/* Musikonet i en liten sirkel i musens farge */
+.spiller-ikon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--musefarge) 30%, #fff);
+  border: 3px solid var(--musefarge);
+  box-shadow: 0 0 0 1px #8a7650; /* så også den hvite musen får en synlig kant */
+}
+
+.spiller-ikon .museikon {
+  width: 32px;
+  height: 25px;
+}
+
+.spiller-navn {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Den som har tur: oransje, litt større og fet tekst */
 .spillerliste li.aktiv {
-  background: #fffaf0;
-  border-color: #e8a317;
-  font-weight: bold;
+  background: #e8a317;
+  border-color: #c98a0c;
+  color: #fff;
+  font-weight: 800;
+  transform: scale(1.04);
+  box-shadow: 0 4px 0 #b07a10;
+}
+
+/* Spretter inn når turen bytter til denne spilleren */
+.spillerliste li.aktiv.sprett {
+  animation: sprett-inn 0.45s ease-out;
+}
+
+@keyframes sprett-inn {
+  0%   { transform: scale(0.9); }
+  55%  { transform: scale(1.12); }
+  100% { transform: scale(1.04); }
+}
+
+/* «🎲 Din tur»-merkelappen */
+.din-tur {
+  margin-left: auto;
+  padding: 2px 8px;
+  background: #fff;
+  color: #b07a10;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Står over en runde (katten): 💤 og litt gjennomsiktig */
+.spillerliste li.staar-over {
+  opacity: 0.55;
+}
+
+.merke-over {
+  margin-left: auto;
+  font-size: 1rem;
+}
+
+.din-tur + .merke-over,
+.merke-over + .din-tur {
+  margin-left: 4px;
 }
 
 /* ---------- Emoji-reaksjoner ---------- */
@@ -266,12 +438,34 @@ aside {
   gap: 6px;
 }
 
+/* Runde knapper som blir litt større ved hover og spretter når man trykker */
 .emoji-knapp {
-  padding: 6px 8px;
-  font-size: 1.4rem;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 1.35rem;
   line-height: 1;
-  background: #fffaf0;
-  border: 2px solid #d9c9a3;
+  background: #fff;
+  border: 2px solid #e6d7b5;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+}
+
+@media (hover: hover) {
+  .emoji-knapp:hover {
+    transform: scale(1.15);
+  }
+}
+
+.emoji-knapp.sprett {
+  animation: emoji-sprett 0.35s ease-out;
+}
+
+@keyframes emoji-sprett {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.8); }
+  70%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
 }
 
 .reaksjon {
@@ -402,8 +596,22 @@ aside {
   .terning.triller,
   .reaksjon,
   .katt-zzz,
-  .katt.sur .katt-kropp {
+  .katt.sur .katt-kropp,
+  .hendelse,
+  .spillerliste li.aktiv.sprett,
+  .emoji-knapp.sprett {
     animation: none;
+  }
+
+  /* Ingen løft eller vekst ved hover/klikk heller */
+  #kast,
+  #tilPallen,
+  .emoji-knapp {
+    transition: none;
+  }
+
+  .emoji-knapp:hover {
+    transform: none;
   }
 
   .maalfelt {
@@ -440,6 +648,7 @@ aside {
     width: 100%;
     max-width: none;
     gap: 12px;
+    padding: 14px 12px 16px;
   }
 
   /* Spillerne står ved siden av hverandre, så alt får plass under brettet */
@@ -450,7 +659,22 @@ aside {
   }
 
   .spillerliste li {
-    padding: 4px 8px;
+    padding: 3px 10px 3px 3px;
+    font-size: 0.95rem;
+  }
+
+  .spiller-ikon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .spiller-ikon .museikon {
+    width: 27px;
+    height: 21px;
+  }
+
+  #status {
+    font-size: 1.2rem;
   }
 
   .terning {
