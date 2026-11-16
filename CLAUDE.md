@@ -98,6 +98,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Playwright usynlig (headless) – laget** (issue #17). Se under.
 - **Fane-ikon og DICE-MICE-logo – laget** (issue #19). Se under.
 - **README.md – laget** (issue #22). Se under.
+- **Oppdatere tester-agenten – laget** (issue #23). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -243,6 +244,19 @@ Valg jeg (Claude) tok underveis:
 - At spillet er laget for å lære GitHub, med Claude Code.
 
 *(Laget. Logoen øverst er `skjermbilder/19-logo.png`, og skjermbildet er `skjermbilder/19-pc.png`. Spesialfeltene står i en tabell. Testet med tester-subagenten: BESTÅTT – bildene og lenken virker, og reglene i teksten stemmer med spillet.)*
+
+## Oppdatere tester-agenten
+
+`.claude/agents/tester.md` skal stemme med spillet slik det er nå:
+
+- Linjen om at `favicon.ico` mangler fjernes. Testeren sjekker i stedet at `favicon.svg` lastes uten feil (issue #19), og konsollen skal ha null feil.
+- Teksten om at brukeren kan klikke i nettleservinduet tas bort, siden Playwright kjører usynlig (issue #17).
+- Pallen: etter seier skjules «Kast terningen», og «Se pallen 🏆» (`#tilPallen`) vises. Beskriv hvordan man raskt setter opp en seier.
+- Flere nyttige spillvariabler og funksjoner (`antallSteg`, `ferdig`, `tomHendelse()` osv.).
+- Grunntesten sjekker også DICE-MICE-logoen (issue #19), musikk-knappen og at «Kast terningen» ikke flytter seg når snakkeboblen dukker opp (issue #11).
+- Skrivefeil rettes.
+
+*(Laget. Testet med de nye instruksjonene: BESTÅTT, skjermbilder i `skjermbilder/23-*.png`. To ting ble rettet etter testen: usynlig Chrome henter ikke fane-ikonet selv, så `favicon.svg` sjekkes med `fetch`; og knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.)*
 
 ## Senere (ikke lag før jeg ber om det)
 
