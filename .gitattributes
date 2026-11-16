@@ -1,0 +1,8 @@
+# Alle tekstfiler lagres og hentes ut med Unix-linjeskift (LF), også på Windows.
+# Da forsvinner advarslene «LF will be replaced by CRLF», og filene er like overalt.
+* text=auto eol=lf
+
+# Lyd og bilder er ikke tekst og skal aldri endres av git
+*.mp3 binary
+*.png binary
+*.jpg binary
