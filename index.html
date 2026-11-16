@@ -4,11 +4,53 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dice-Mice!</title>
+  <!-- Fane-ikon: osten fra midten av brettet -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topp">
-    <h1>Dice-Mice!</h1>
+    <!-- Logo: DICE er ost med ostehull, MICE er musegrå med museører på M og hale på E.
+         Bredden på hvert ord er låst (textLength), så ørene og halen havner riktig uansett skrift. -->
+    <h1 class="logo">
+      <svg viewBox="0 0 600 112" role="img" aria-labelledby="logoTittel">
+        <title id="logoTittel">Dice-Mice!</title>
+        <defs>
+          <!-- Ostegult mønster med ostehull, brukt som fyll i DICE -->
+          <pattern id="ostehull" patternUnits="userSpaceOnUse" width="70" height="56">
+            <rect width="70" height="56" fill="#ffd54a"/>
+            <ellipse cx="14" cy="14" rx="7" ry="6" fill="#e3a21a"/>
+            <ellipse cx="47" cy="10" rx="4" ry="3.5" fill="#e3a21a"/>
+            <ellipse cx="36" cy="36" rx="8" ry="6.5" fill="#e3a21a"/>
+            <ellipse cx="62" cy="45" rx="4.5" ry="4" fill="#e3a21a"/>
+            <ellipse cx="9" cy="46" rx="3.5" ry="3" fill="#e3a21a"/>
+          </pattern>
+          <!-- Musegrå, litt lysere øverst -->
+          <linearGradient id="musegraa" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#b8b8b8"/>
+            <stop offset="1" stop-color="#8a8a8a"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Museørene på M (tegnes før teksten, så M ligger foran dem) -->
+        <g stroke="#333" stroke-width="4">
+          <circle cx="329" cy="29" r="15" fill="url(#musegraa)"/>
+          <circle cx="391" cy="29" r="15" fill="url(#musegraa)"/>
+        </g>
+        <circle cx="329" cy="26" r="7.5" fill="#e89aa6"/>
+        <circle cx="391" cy="26" r="7.5" fill="#e89aa6"/>
+
+        <!-- Musehalen på E (tegnes før teksten, så den kommer ut bak E) -->
+        <path d="M 552 84 C 584 92 596 62 580 52 C 568 45 560 58 570 63" fill="none" stroke="#333" stroke-width="9" stroke-linecap="round"/>
+        <path d="M 552 84 C 584 92 596 62 580 52 C 568 45 560 58 570 63" fill="none" stroke="#e89aa6" stroke-width="4.5" stroke-linecap="round"/>
+
+        <g aria-hidden="true" font-family="'Arial Black', 'Segoe UI Black', Impact, system-ui, sans-serif" font-weight="900" font-size="84" stroke-linejoin="round" paint-order="stroke">
+          <text x="12" y="96" textLength="250" lengthAdjust="spacingAndGlyphs" fill="url(#ostehull)" stroke="#b07a10" stroke-width="7">DICE</text>
+          <text x="270" y="96" textLength="34" lengthAdjust="spacingAndGlyphs" fill="#8a7650" stroke="#5a4a2a" stroke-width="4">-</text>
+          <text x="316" y="96" textLength="250" lengthAdjust="spacingAndGlyphs" fill="url(#musegraa)" stroke="#333" stroke-width="7">MICE</text>
+        </g>
+      </svg>
+    </h1>
     <div class="lydknapper">
       <button type="button" id="lydKnapp" class="liten-knapp" aria-pressed="true">🔊 Lyd på</button>
       <!-- Musikk-knappen og volumet vises bare når assets/audio/tema.mp3 finnes -->

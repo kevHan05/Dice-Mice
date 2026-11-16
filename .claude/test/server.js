@@ -17,6 +17,7 @@ const TYPER = {
   '.json': 'application/json',
   '.mp3': 'audio/mpeg',
   '.png': 'image/png',
+  '.svg': 'image/svg+xml',
 };
 
 let stoppTimer = setTimeout(() => process.exit(0), STOPP_ETTER_MS);

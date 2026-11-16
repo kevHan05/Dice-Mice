@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -52 104 104">
+  <!-- Fane-ikon: osten fra midten av brettet (samme tegning som tegnOst i game.js),
+       med litt tykkere kant så den synes godt i den lille fanen -->
+  <g stroke="#b07a10" stroke-width="3" stroke-linejoin="round">
+    <!-- Skorpe (den buede utsiden av den runde osten) -->
+    <path d="M 37.3 1.4 A 95 42.75 0 0 0 50 -20 L 50 10 A 95 42.75 0 0 1 37.3 31.4 Z" fill="#e09a1a"/>
+    <!-- Forside (snittflaten) -->
+    <path d="M -45 -20 L 37.3 1.4 L 37.3 31.4 L -45 10 Z" fill="#f2b72c"/>
+    <!-- Overside -->
+    <path d="M -45 -20 L 37.3 1.4 A 95 42.75 0 0 0 46.8 -31.1 Z" fill="#ffd54a"/>
+  </g>
+  <!-- Hull -->
+  <ellipse cx="-15" cy="3" rx="6" ry="5" fill="#d99a1c"/>
+  <ellipse cx="15" cy="16" rx="4.5" ry="4" fill="#d99a1c"/>
+  <ellipse cx="0" cy="-17" rx="5" ry="2.2" fill="#e6b52e"/>
+  <ellipse cx="25" cy="-15" rx="3.5" ry="1.6" fill="#e6b52e"/>
+</svg>

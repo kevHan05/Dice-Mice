@@ -25,6 +25,17 @@ h1 {
   margin: 0;
 }
 
+/* DICE-MICE-logoen øverst: tilpasser seg skjermbredden */
+.logo {
+  line-height: 0;
+}
+
+.logo svg {
+  display: block;
+  width: min(92vw, 460px);
+  height: auto;
+}
+
 h2 {
   margin: 0;
 }
