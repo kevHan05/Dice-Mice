@@ -185,7 +185,7 @@ Funnet av `tilgjengelighet` i issue #30, ikke rettet ennå. `tester` regner dem 
 
 ## Pågår og planlagt
 
-- **Rette tilgjengelighetsproblemene fra #30** (issue #35) – planlagt. Alt i «Kjente tilgjengelighetsproblemer» rettes uten å endre stilen: fokus som forsvinner, kontrasten på de oransje knappene, skjermleser (status, terning, brett), tydelig fokusramme, `aria-pressed` på valgknappene, 44 px på telefon og «Kast terningen» lettere å nå, og redusert bevegelse (ingen bue, ingen blinking). Testes med `tester` og den fulle `tilgjengelighet`-sjekken.
+- **Rette tilgjengelighetsproblemene fra #30** (issue #35) – laget, **venter på testing**. Endringene ligger på branchen `35-rette-tilgjengelighet` (utkast-PR til `test`). Gjenstår: kjøre `tester` og så den fulle `tilgjengelighet`-sjekken, rette det de finner, fjerne det som er rettet fra «Kjente tilgjengelighetsproblemer», og merge i `test`. Alt i «Kjente tilgjengelighetsproblemer» rettes uten å endre stilen: fokus som forsvinner, kontrasten på de oransje knappene, skjermleser (status, terning, brett), tydelig fokusramme, `aria-pressed` på valgknappene, 44 px på telefon og «Kast terningen» lettere å nå, og redusert bevegelse (ingen bue, ingen blinking). Testes med `tester` og den fulle `tilgjengelighet`-sjekken.
 
 ## Senere (ikke lag før jeg ber om det)
 

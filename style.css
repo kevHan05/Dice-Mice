@@ -66,21 +66,24 @@ h2 {
 
 .volum-valg input {
   width: 110px;
+  height: 44px; /* stor nok å treffe på telefon */
 }
 
+/* Oransje knapper har mørkebrun tekst: hvit tekst på oransje var for svak (2,17 : 1), mørkebrun gir ca. 6 : 1 */
 button {
   padding: 12px 24px;
   font-size: 1.1rem;
   border: none;
   border-radius: 10px;
   background: #e8a317;
-  color: #fff;
+  color: #3d2b08;
   cursor: pointer;
   touch-action: manipulation; /* trykk på telefon reagerer med en gang, uten zoom ved dobbelttrykk */
 }
 
 button:disabled {
   background: #bbb;
+  color: #4a4a4a;
   cursor: default;
 }
 
@@ -92,8 +95,28 @@ button:disabled {
 }
 
 .liten-knapp {
+  min-height: 44px; /* stor nok å treffe på telefon */
   padding: 6px 12px;
   font-size: 0.95rem;
+}
+
+/* Tydelig fokusramme for tastaturbrukere: tykk, mørkebrun og litt utenfor kanten, så den synes på alle knapper */
+:focus-visible {
+  outline: 3px solid #3d2b08;
+  outline-offset: 3px;
+}
+
+/* Tekst som bare skjermlesere får med seg (usynlig på skjermen) */
+.skjult-tekst {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ---------- Spillet ---------- */
@@ -228,7 +251,7 @@ aside {
 
 /* Løfter seg ved hover (bare på enheter med mus, så den ikke «henger» på telefon) */
 @media (hover: hover) {
-  #kast:hover:not(:disabled),
+  #kast:hover:not(:disabled):not([aria-disabled="true"]),
   #tilPallen:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 0 #b07a10;
@@ -236,17 +259,21 @@ aside {
 }
 
 /* Trykkes ned ved klikk */
-#kast:active:not(:disabled),
+#kast:active:not(:disabled):not([aria-disabled="true"]),
 #tilPallen:active:not(:disabled) {
   transform: translateY(4px);
   box-shadow: 0 2px 0 #b07a10;
 }
 
-/* Deaktivert: grå og flat */
-#kast:disabled {
+/* Deaktivert mens terningen ruller: grå og flat. Knappen bruker aria-disabled (ikke disabled),
+   så den beholder fokus for tastaturbrukere. */
+#kast:disabled,
+#kast[aria-disabled="true"] {
   background: #bbb;
+  color: #4a4a4a;
   box-shadow: none;
   transform: translateY(6px);
+  cursor: default;
 }
 
 /* Feltet musen skal til, lyser opp før den hopper */
@@ -408,7 +435,7 @@ aside {
 .spillerliste li.aktiv {
   background: #e8a317;
   border-color: #c98a0c;
-  color: #fff;
+  color: #3d2b08; /* mørkebrun tekst på oransje: lett å lese */
   font-weight: 800;
   transform: scale(1.04);
   box-shadow: 0 4px 0 #b07a10;
@@ -430,7 +457,7 @@ aside {
   margin-left: auto;
   padding: 2px 8px;
   background: #fff;
-  color: #b07a10;
+  color: #7a5208; /* mørkere brun enn før, så den lille teksten er lett å lese */
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 800;
@@ -570,7 +597,7 @@ aside {
 .antall-valg button.valgt {
   background: #e8a317;
   border-color: #e8a317;
-  color: #fff;
+  color: #3d2b08;
 }
 
 .navnefelt {
@@ -594,6 +621,7 @@ aside {
 
 .navnerad input,
 .navnerad select {
+  min-height: 44px; /* stor nok å treffe på telefon */
   padding: 10px;
   font-size: 1rem;
   border: 2px solid #8a7650;
@@ -713,5 +741,41 @@ aside {
   .navnerad select {
     max-width: 105px;
     padding: 10px 4px;
+  }
+
+  /* På telefon står terningen og «Kast terningen» ved siden av hverandre, rett under statusteksten,
+     så knappen er synlig uten å scrolle. Snakkeboblen kommer under dem (den har fast høyde, så
+     knappen flytter seg fortsatt ikke). */
+  aside {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    column-gap: 20px;
+  }
+
+  .spillerliste,
+  #status,
+  .hendelse-plass,
+  .reaksjoner {
+    width: 100%;
+  }
+
+  .spillerliste { order: 1; }
+  #status { order: 2; }
+  .terning { order: 3; }
+  #kast,
+  #tilPallen { order: 4; }
+  .hendelse-plass { order: 5; }
+  .reaksjoner { order: 6; }
+
+  /* Boblen står under knappen her, så spissen som peker opp mot statusteksten tas bort */
+  .hendelse::before {
+    display: none;
+  }
+
+  /* Litt mer luft mellom emoji-knappene, så det er lettere å treffe riktig */
+  .reaksjoner {
+    gap: 10px;
   }
 }
