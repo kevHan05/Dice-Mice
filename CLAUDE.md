@@ -51,7 +51,8 @@ Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 - Endringer går fra `test` til `main` bare når jeg sier fra. Da lager Claude en PR fra `test` til `main`, viser hva som er med, og merger etter at jeg har sagt OK.
 - Testingen gjøres av subagenten `tester` med Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`. Den kjøres bare når noe i selve spillet kan være påvirket (`index.html`, `style.css`, `game.js`, `favicon.svg`, `assets/`) eller testoppsettet endres. Ellers sjekker Claude selv det som er endret.
 - Issues og PR-er følger malene i `.github/` – både de Claude lager og de som lages for hånd på GitHub.
-- Subagenten `tilgjengelighet` kjøres bare når jeg ber om det, ikke på hver PR. Den rapporterer med det viktigste først og endrer ikke kode; det jeg vil rette, blir egne oppgaver.
+- `tester` gjør alltid en kort tilgjengelighetssjekk av det som er endret. Bare nye problemer gjør testen FEILET; kjente problemer står i «Kjente tilgjengelighetsproblemer».
+- Den fulle sjekken, subagenten `tilgjengelighet`, kjøres bare når jeg ber om det eller når oppgaven handler om tilgjengelighet, ikke på hver PR. Den rapporterer med det viktigste først og endrer ikke kode; det jeg vil rette, blir egne oppgaver.
 - En hook retter filformatet hver gang Claude endrer en fil: Unix-linjeskift (LF), ingen mellomrom på slutten av linjer, og nøyaktig ett linjeskift til slutt. Bare tekstfiler, ikke lyd og bilder.
 - En hook sjekker JavaScript hver gang Claude endrer en .js-fil: den kjører `node --check`, og er det en syntaksfeil, får Claude feilmeldingen tilbake med en gang (exit-kode 2) og retter den. Uten feil, og for andre filer, er den stille. Den står etter rett-format-hooken i `settings.json` (Claude Code kjører dem samtidig, men det spiller ingen rolle, fordi formatrettingen ikke endrer om koden er gyldig).
 
@@ -148,6 +149,19 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Playwright kjører usynlig (headless). Usynlig Chrome henter ikke fane-ikonet selv, så testeren sjekker `favicon.svg` med `fetch`. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
 - Skjermbildene fra testene heter `skjermbilder/<issue-nummer>-<navn>.png`.
 
+### Kjente tilgjengelighetsproblemer
+
+Funnet av `tilgjengelighet` i issue #30, ikke rettet ennå. `tester` regner dem ikke som nye feil. Når et problem er rettet, fjernes det herfra.
+
+- Fokus forsvinner til `<body>` når «Kast terningen» blir deaktivert under et kast eller skjules ved seier, og når skjermen bytter (start → spill, «Se pallen 🏆» → pallen, lobbyen).
+- Hvit tekst på oransje (#e8a317) har kontrast 2,17 : 1. Gjelder alle knapper og piller med den fargen: «Start spillet», «Kast terningen», «Se pallen 🏆», «Spill igjen», valgte antall- og brett-knapper og navnet i «Din tur»-pillen. «🎲 Din tur»-merkelappen har 3,73 : 1.
+- Statusteksten («… sin tur», «… vant!») har ikke `aria-live`. Terningen har `aria-label` («Terningen viser 4»), men blir ikke lest opp av seg selv etter et kast.
+- Brettet forteller ikke skjermleser hvor musene står.
+- Fokusrammen er nettleserens tynne standard (1 px), ingen egen `:focus-visible`-stil.
+- Valgte antall- og brett-knapper vises bare med farge (ingen `aria-pressed`).
+- På telefon: lyd- og musikk-knappene (36 px), volumskyveren (16 px), navnefeltene (42 px) og pynt-listene (43 px) er under 44 px høye. «Kast terningen» og «Se pallen 🏆» ligger under skjermkanten.
+- Med redusert bevegelse hopper musene fortsatt i bue, og terningtallene blinker mens den ruller.
+
 ## Ferdig
 
 - **Fase 1: Planlegging** – brainstorming, kriterier og en prototype som kjører lokalt.
@@ -164,13 +178,14 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **README.md** (issue #22).
 - **Oppdatert tester-agent** (issue #23).
 - **Ryddet CLAUDE.md** (issue #24) – ferdige seksjoner samlet her, detaljene flyttet til «Valg i prototypen».
+- **Kort tilgjengelighetssjekk i tester-agenten** (issue #34) – `tester` sjekker tilgjengeligheten til det som er endret. Bare nye problemer gjør testen FEILET.
 - **Hook som sjekker JavaScript** (issue #31) – `sjekk-js.js` fanger syntaksfeil i .js-filer med en gang.
 - **Subagent for tilgjengelighet** (issue #30) – `tilgjengelighet` sjekker tastatur, skjermleser, kontrast, knappestørrelse og redusert bevegelse. Kjøres bare når jeg ber om det. Første rapport: `skjermbilder/30-*.png`.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
 
-- Ingenting akkurat nå.
+- **Rette tilgjengelighetsproblemene fra #30** (issue #35) – planlagt. Alt i «Kjente tilgjengelighetsproblemer» rettes uten å endre stilen: fokus som forsvinner, kontrasten på de oransje knappene, skjermleser (status, terning, brett), tydelig fokusramme, `aria-pressed` på valgknappene, 44 px på telefon og «Kast terningen» lettere å nå, og redusert bevegelse (ingen bue, ingen blinking). Testes med `tester` og den fulle `tilgjengelighet`-sjekken.
 
 ## Senere (ikke lag før jeg ber om det)
 
