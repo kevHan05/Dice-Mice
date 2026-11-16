@@ -14,24 +14,38 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 
 ## Kjøre spillet
 
-Åpne `index.html` i rotmappen i nettleseren. Ingen installasjon trengs.
+Åpne `index.html` i rotmappen i nettleseren. Ingen installasjon trengs. På nettet: https://kevhan05.github.io/Dice-Mice/
 
 ## Filer
 
-- `index.html` – siden
+- `index.html` – siden (med DICE-MICE-logoen)
 - `style.css` – utseende
 - `game.js` – brett, mus, ost, terning, spillogikk og lyd
+- `favicon.svg` – fane-ikonet (osten)
 - `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
-- `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave: issue → branch fra `test` (`<N>-<kort-beskrivelse>`) → endring → testing med tester-subagenten → commit (`<issue-tittel> #<N>`) → push → PR til `test` → merge i `test` → lukk issuet. `test` → `main` bare når jeg sier fra.
-- `.claude/agents/tester.md` – subagenten `tester`, som tester spillet med Playwright etter hver endring og tar skjermbilder
-- `.claude/test/server.js` – liten testserver (Node, ingen pakker) som viser spillet på `http://127.0.0.1:8123` for Playwright. Ikke en del av spillet.
-- `.claude/settings.json` og `.claude/hooks/rett-format.js` – hooken som retter filformatet (LF, mellomrom, linjeskift til slutt) hver gang Claude endrer en fil
-- `.mcp.json` – oppsett for Playwright, som Claude bruker til å teste spillet i en ekte nettleser (krever Node.js)
+- `README.md` – presentasjonen av spillet på GitHub
 - `skjermbilder/` – skjermbilder fra Playwright-testene
+- `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave
+- `.claude/agents/tester.md` – subagenten `tester`, som tester spillet med Playwright og tar skjermbilder
+- `.claude/test/server.js` – liten testserver (Node, ingen pakker) som viser spillet på `http://127.0.0.1:8123` for Playwright. Ikke en del av spillet.
+- `.claude/settings.json` og `.claude/hooks/rett-format.js` – hooken som retter filformatet hver gang Claude endrer en fil
+- `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører usynlig (`--headless`)
 - `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
 - `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
 
-Git: `https://github.com/kevHan05/Dice-Mice.git`. Grener: `main` (ferdig og publisert på GitHub Pages) og `test` (alle endringer samles her før `main`).
+## Git og arbeidsflyt
+
+Git: `https://github.com/kevHan05/Dice-Mice.git`. Grener:
+- `main` – ferdig og publisert. GitHub Pages publiserer fra roten av `main` (Settings → Pages → Branch `main`, mappe `/ (root)`).
+- `test` – alle endringer samles her før `main`.
+
+Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
+
+- Jeg forklarer en oppgave. Claude lager issuet på GitHub og gjør alt derfra til endringen er merget i `test`: branch fra `test` (`<N>-<kort-beskrivelse>`), endringen, testing, commit (`<issue-tittel> #<N>`), push, PR til `test`, merge og lukking av issuet.
+- `Closes #N` lukker bare issuet når en PR merges til `main`. Derfor lukker Claude issuet selv når PR-en er merget i `test`, med en kommentar om hvilken PR som løste det.
+- Endringer går fra `test` til `main` bare når jeg sier fra. Da lager Claude en PR fra `test` til `main`, viser hva som er med, og merger etter at jeg har sagt OK.
+- Testingen gjøres av subagenten `tester` med Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`.
+- En hook retter filformatet hver gang Claude endrer en fil: Unix-linjeskift (LF), ingen mellomrom på slutten av linjer, og nøyaktig ett linjeskift til slutt. Bare tekstfiler, ikke lyd og bilder.
 
 ## Spillet
 
@@ -52,211 +66,104 @@ Git: `https://github.com/kevHan05/Dice-Mice.git`. Grener: `main` (ferdig og publ
 
 - Et ostestykke skåret ut som et kakestykke fra en stor rund ost.
 
+### Ikke bestemt ennå
+
+- Stil/tema: dagens stil er valgt og skal beholdes – beige bakgrunn med ostehull, oransje og ost-gult, og tegneseriepreg (tykke kanter, runde former). Nye ting skal passe inn i den.
+
 ## Valg i prototypen (foreløpige, kan endres)
 
-Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
+Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 
-- Alle spiller på samme maskin. Antall spillere velges på startskjermen (2 er forhåndsvalgt).
+### Spillere og start
+
+- Alle spiller på samme maskin. Antall spillere (1–4) velges på startskjermen (2 er forhåndsvalgt).
 - Skriver en spiller ikke inn noe navn, brukes musens fargenavn (f.eks. «Grå mus»). Maks 20 tegn.
+- Musene har hver sin farge: grå, brun, hvit, svart. Ved siden av navnefeltet vises musen spilleren får.
+- Pynt (`PYNT`) velges i en liste ved siden av navnet: ingen pynt, partyhatt, krone, sløyfe eller briller.
 - Tre brett (`BRETT`): Kort (30 steg, 2 omganger), Vanlig (40 steg, 2,5 omganger, forhåndsvalgt) og Lang (55 steg, 3 omganger).
-- Musene har hver sin farge: grå, brun, hvit, svart.
+
+### Terning og bevegelse
+
 - Man trenger ikke treffe osten nøyaktig – til eller forbi osten er seier.
 - Slår man 6, kaster man igjen, hver gang. Det står «🎲 … slo 6 og kaster igjen!» under «… sin tur». Lander man på et 🎲-felt med en sekser, blir det bare ett ekstra kast. Lander man på kattefeltet med en sekser, får man først kaste igjen, og står over runden etter.
-- Terningen ruller i 0,7 sekunder (`TRILLE_TID`), og hvert hopp tar 0,28 sekunder (`HOPP_TID`).
+- Terningen ruller i 0,7 sekunder (`TRILLE_TID`), og hvert hopp tar 0,28 sekunder (`HOPP_TID`). Musen hopper felt for felt.
+- Feltet musen skal til, lyser gult i et halvt sekund før den hopper (`LYS_TID`).
 - Musene står litt og vipper mens de venter.
-- Har man slått av animasjoner i operativsystemet, står musene stille og seiersfeiringen vises bare som tekst.
-- Spillerlisten står over terningen, og den som har tur er markert med oransje ramme. På telefon står spillerne i en rad.
-- Vinnermusen tar backflips til man går videre til pallen. Konfettien faller i ca. 10 sekunder.
-- Spesialfelt (`SPESIALFELT`), omtrent hvert sjette felt, med farge og ikon:
+
+### Spesialfelt
+
+- Spesialfelt (`SPESIALFELT`), omtrent hvert sjette felt, med farge og ikon. De får nye, tilfeldige plasser hver runde:
   - ⏩ grønn – «ostesmuler»: hopp 3 felt frem.
   - ⏪ rød – «musefelle»: 3 felt tilbake.
   - 🎲 gul – kast igjen.
   - Blå uten ikon – kattefeltet: stå over neste runde. En oransje katt ligger og sover ved siden av feltet, på utsiden av spiralen og langs stien. En liten blå «z» flyter opp fra den. Lander man der, våkner katten: gule øyne, sinte øyenbryn og 💢, den rister og hveser. Etter 3 sekunder sovner den igjen (`SUR_TID`).
   - Ikke på START, første felt eller feltet rett før osten. Havner man på et nytt spesialfelt etter ⏩ eller ⏪, skjer det ingenting.
-  - Hva som skjedde, står som en tekst under «… sin tur».
-- Feltet musen skal til, lyser gult i et halvt sekund før den hopper (`LYS_TID`).
+  - Hva som skjedde, står i en snakkeboble under «… sin tur».
+
+### Seier og etter spillet
+
+- Vinnermusen tar backflips ved osten, og konfetti faller over brettet i ca. 10 sekunder. Har man slått av animasjoner i operativsystemet, vises bare seiersteksten.
 - Etter seieren byttes «Kast terningen» ut med «Se pallen 🏆», så man selv velger når man går videre.
-- Pallen: plassering etter hvor langt musene kom. Står to likt, kommer den som kastet først foran. Navn over 12 tegn forkortes på pallen. Musen på 4. plass gråter (blå tårer).
+- Pallen: plassering etter hvor langt musene kom. Står to likt, kommer den som kastet først foran. Navn over 12 tegn forkortes på pallen. Er det 4 spillere, står musen på 4. plass ved siden av pallen og gråter (blå tårer).
 - «Spill igjen» bruker samme spillere, pynt og brett, men spesialfeltene får nye plasser. «Tilbake til lobby» går til startskjermen med navnene og pynten fortsatt utfylt.
-- Pynt (`PYNT`) velges i en liste ved siden av navnet: ingen pynt, partyhatt, krone, sløyfe eller briller.
-- Emoji-reaksjoner: 👍 😂 😮 😢 🧀 🎉 under terningen. Emojien flyter opp over brettet.
-- Bakgrunn: rolige «ostehull» i litt mørkere beige, og en rund lys brettplate under spiralen. Fargene er de samme som før.
-- Lydeffekter lages i nettleseren (Web Audio), uten lydfiler: terningen høres ut som en ekte terning som ruller (klakk som blir glissere, og et dunk når den stopper), musen sier «boing» når den hopper, egne lyder for spesialfeltene, og en fanfare ved seier. Knappen «🔊 Lyd på/av» øverst skrur dem av og på.
+
+### Sidepanelet
+
+- Panelet ved siden av brettet er et eget kort med lys bakgrunn, runde hjørner og myk skygge.
+- Spillerlisten står øverst i panelet. Hver spiller er en avrundet «pille» med musikonet i en sirkel i en lys utgave av musens farge, med kant i musens farge (den hvite musen får i tillegg en tynn brun kant). På telefon er pillene litt mindre og står i rader under brettet.
+- Den som har tur: oransje pille, litt større, fet tekst og «🎲 Din tur»-merkelapp. Når turen bytter, spretter den nye spilleren litt inn – men ikke når samme spiller kaster på nytt (sekser eller 🎲).
+- Spillere som står over en runde får et 💤-merke og blir litt gjennomsiktige, fra de lander på kattefeltet til de har stått over.
+- Statusteksten er stor og tydelig, med en prikk i fargen til musen som har tur.
+- Snakkeboblen har farge etter hva som skjedde (grønn ⏩, rød ⏪, gul 🎲, blå katt), fet og litt mørkere tekst, og en liten spiss som peker opp mot statusteksten. Den popper inn. Skjer to ting samtidig (f.eks. katten og en sekser), bestemmer det første fargen.
+- Snakkeboblen har en fast plass (112 px høy), så terningen, «Kast terningen» og emoji-knappene står stille med og uten boble. Når den er tom, er plassen tom.
+- Terningen er i «tegneserie»-stil: tykk kant, hard skygge rett under og runde hjørner. Den vipper mens den ruller.
+- «Kast terningen» og «Se pallen» er tykke 3D-knapper med mørkere kant i bunnen. De løfter seg ved hover og trykkes ned ved klikk. Deaktivert er de grå, flate og står litt lavere.
+- Emoji-reaksjoner: 👍 😂 😮 😢 🧀 🎉 som runde knapper under terningen. De blir større ved hover og spretter når man trykker, og emojien flyter opp over brettet. Nå som alle sitter ved samme maskin, vises de bare på skjermen.
+- Hover-effektene gjelder bare på enheter med mus, så de ikke «henger igjen» på telefon. Med prefers-reduced-motion er sprett og vipp av.
+
+### Logo, ikon og utseende
+
+- Logo øverst: «DICE-MICE» som SVG rett i `index.html`. DICE er ost-gul med ostehull (et mønster som fyller bokstavene, så hullene alltid er inni dem) og brun osteaktig kant. MICE er grå med svak overgang (lysere øverst), museører på M og en rosa musehale på E. Bindestreken er brun.
+- Logoen bruker Arial Black (med reserveskrifter). Bredden på hvert ord er låst, så ørene og halen havner riktig også med en annen skrift. Den er maks 460 px bred, vises på alle skjermene og leses som «Dice-Mice!» av skjermlesere.
+- Fane-ikonet `favicon.svg` er osten fra brettet, med litt tykkere kant så den synes i den lille fanen.
+- Bakgrunn: rolige «ostehull» i litt mørkere beige, og en rund lys brettplate under spiralen.
+- Siden tilpasser seg både telefon og PC, og trykk fungerer som klikk.
+
+### Lyd og musikk
+
+- Lydeffekter lages i nettleseren (Web Audio), uten lydfiler: terningen høres ut som en ekte terning som ruller (klakk som blir glissere, og et dunk når den stopper), musen sier «boing» når den hopper, egne lyder for spesialfeltene (katten hveser), og en fanfare ved seier. Knappen «🔊 Lyd på/av» øverst skrur dem av og på.
 - Musikken (`assets/audio/tema.mp3`) starter når man trykker «Start spillet», og går i loop. Musikk-knappen (🎵) skrur den av og på. Har man skrudd den av med knappen, starter den ikke av seg selv igjen. En volumskyver ved siden av knappen styrer hvor høyt musikken spiller (0,4 fra start). Knappen og skyveren vises bare når sangfilen finnes.
 
-## Faser
+### Testing og verktøy
 
-- **Fase 1: Planlegging – ferdig.** Brainstorming, kriterier, og en prototype som kjører lokalt.
-- **Fase 2: Animasjon og UI – ferdig.**
-- **Fase 3: Innhold og lyd – laget, venter på sjekk.** Alt fra den gamle «Senere»-listen, unntatt å spille over nettet. Se under.
-- **Fase 4: Justeringer – laget, venter på sjekk.** Se under.
-- **Fase 5: Sidepanelet – laget, venter på sjekk** (issue #7). Se under.
-- **Spillet til rotmappen – laget, venter på sjekk** (issue #9). Se under.
-- **Fast «Kast terningen»-knapp – laget, venter på sjekk** (issue #11). Se under.
-- **Skjermbilder fra Playwright – laget, venter på sjekk** (issue #13). Se under.
-- **Ny arbeidsflyt (test-branch, tester-subagent, format-hook) – laget** (issue #15). Se under.
-- **Playwright usynlig (headless) – laget** (issue #17). Se under.
-- **Fane-ikon og DICE-MICE-logo – laget** (issue #19). Se under.
-- **README.md – laget** (issue #22). Se under.
-- **Oppdatere tester-agenten – laget** (issue #23). Se under.
+- Playwright åpner ikke filer direkte (`file:`), så testene bruker testserveren i `.claude/test/server.js`. Den stopper av seg selv etter 5 minutter uten besøk.
+- Playwright kjører usynlig (headless). Usynlig Chrome henter ikke fane-ikonet selv, så testeren sjekker `favicon.svg` med `fetch`. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
+- Skjermbildene fra testene heter `skjermbilder/<issue-nummer>-<navn>.png`.
 
-## Fase 2: Animasjon og UI
+## Ferdig
 
-### Animasjoner
+- **Fase 1: Planlegging** – brainstorming, kriterier og en prototype som kjører lokalt.
+- **Fase 2: Animasjon og UI** – startskjerm, navn, spillerliste, hopping, terningrulling, seiersfeiring, telefon og PC.
+- **Fase 3: Innhold og lyd** – spesialfelt, tilfeldig brett, tre brett, emoji-reaksjoner, pall, «Spill igjen»/«Tilbake til lobby», pynt, bakgrunn, musikk og lydeffekter.
+- **Fase 4: Justeringer** – sekser gir nytt kast, og kattefeltet med en sovende katt.
+- **Fase 5: Sidepanelet** (issue #7) – kort, piller, snakkeboble, tegneserieterning og 3D-knapper.
+- **Spillet til rotmappen** (issue #9) – så GitHub Pages publiserer fra roten og musikken blir med.
+- **Fast «Kast terningen»-knapp** (issue #11) – snakkeboblen har fast plass.
+- **Skjermbilder fra Playwright** (issue #13) – mappen `skjermbilder/`, `.gitignore` og `.mcp.json`.
+- **Ny arbeidsflyt** (issue #15) – `test`-branch, tester-subagent, format-hook og `.gitattributes`.
+- **Playwright usynlig** (issue #17).
+- **Fane-ikon og DICE-MICE-logo** (issue #19).
+- **README.md** (issue #22).
+- **Oppdatert tester-agent** (issue #23).
 
-- Musen hopper felt for felt fremover i stedet for å flytte seg rett til det nye feltet. *(Laget.)*
-- Terningen ruller før den viser tallet. *(Laget.)*
-- Seiersfeiring når en mus kommer til osten: vinnermusen tar backflips ved osten, og konfetti faller over brettet. *(Laget.)*
-- Musene beveger seg litt mens de står i ro. *(Laget.)*
+## Pågår og planlagt
 
-### UI
-
-- Startskjerm før spillet begynner. *(Laget.)*
-- På startskjermen velger man antall spillere (1–4). *(Laget.)*
-- Hver spiller skriver inn sitt eget navn. Ved siden av navnefeltet vises musen spilleren får. *(Laget.)*
-- Under spillet vises en spillerliste med hvem som er med og hvem sin tur det er. *(Laget.)*
-- Siden skal fungere og se bra ut både på telefon og PC (tilpasser seg skjermstørrelsen, og trykk fungerer som klikk). *(Laget.)*
-
-### Ikke bestemt ennå
-
-- Stil/tema for spillet. Ikke velg en ny stil – behold dagens utseende til jeg har bestemt meg.
-
-## Fase 3: Innhold og lyd
-
-- Steg på brettet som gjør forskjellige ting når man lander på dem. *(Laget.)*
-- Brettet: feltet musen kommer til å lande på lyser opp før den hopper. *(Laget.)*
-- Brettet: tilfeldig brett, der spesialfeltene ligger på nye plasser hver runde. *(Laget.)*
-- Brettet: flere brett å velge mellom (f.eks. kort og lang spiral). *(Laget.)*
-- Emoji-reaksjoner spillerne kan sende til hverandre under spillet. *(Laget. Nå som alle sitter ved samme maskin, vises de bare på skjermen.)*
-- Etter spillet: en pall med musene på 1., 2. og 3. plass. Er det 4 spillere, står den siste musen ved siden av pallen og gråter. *(Laget.)*
-- Etter spillet: valg mellom «Spill igjen» (samme spillere) og «Tilbake til lobby». *(Laget.)*
-- Dekorere musene. *(Laget.)*
-- Bakgrunn. *(Laget.)*
-- Musikk (SUNO). *(Laget. Sangen ligger i `assets/audio/tema.mp3`.)*
-- Lydeffekter. *(Laget.)*
-
-## Fase 4: Justeringer
-
-- Slår man 6, får man kaste igjen. Gjelder hver gang man slår 6. *(Laget.)*
-- Kattefeltet byttes ut: i stedet for 💤-ikonet ligger det en katt ved siden av feltet og sover. Lander man der, våkner katten og blir sur. Straffen er den samme som før: man står over neste runde. *(Laget.)*
-
-## Fase 5: Sidepanelet
-
-Sidepanelet (`<aside>` ved siden av brettet) skal bli mindre kjedelig. Behold fargene og stilen spillet har nå (beige, oransje, ost-gul). Brettet, musene og spillogikken endres ikke – bare utseendet på sidepanelet, mest i `style.css`.
-
-- Panelet: alt ligger i et eget kort med lys bakgrunn, runde hjørner og en myk kant/skygge, så det skiller seg fra bakgrunnen med ostehull. *(Laget.)*
-- Spillerlisten: hver spiller er en avrundet «pille» med musikonet i en liten sirkel i musens farge. *(Laget.)*
-- Den som har tur: oransje bakgrunn, litt større, fet tekst og en liten «🎲 Din tur»-merkelapp. Når turen bytter, spretter den nye spilleren litt inn. *(Laget.)*
-- Spillere som står over en runde (katten) får et lite 💤-merke og blir litt gjennomsiktige. *(Laget.)*
-- Statusteksten: større og tydeligere, med en prikk i fargen til musen som har tur. *(Laget.)*
-- Hendelsesteksten: en snakkeboble med farge etter hva som skjedde – grønn for ⏩, rød for ⏪, gul for 🎲, blå for katten. Den popper inn når den dukker opp. Tom boble vises ikke. *(Laget.)*
-- Terningen: mer «tegneserie» – litt tykkere kant, en hard skygge rett under (som om den står på bordet) og litt runde hjørner. Den vipper litt mens den ruller. *(Laget.)*
-- Knappene «Kast terningen» og «Se pallen»: «tykke» knapper med en mørkere kant i bunnen, som en 3D-knapp. De løfter seg litt ved hover og trykkes ned ved klikk. Deaktivert: grå og flat. *(Laget.)*
-- Emoji-knappene: runde, blir litt større ved hover og spretter når man trykker. *(Laget.)*
-- Skal se bra ut både på telefon og PC. Bare CSS-animasjoner. Med prefers-reduced-motion er sprett og vipp av. *(Laget.)*
-
-Valg jeg (Claude) tok underveis:
-
-- Sirkelen rundt musikonet er en lys utgave av musens farge med kant i musens farge, så musen synes. Den hvite musen får i tillegg en tynn brun kant.
-- 💤-merket vises fra musen lander på kattefeltet til den har stått over runden sin.
-- Teksten i snakkeboblen er fet og litt mørkere, så den er lett å lese.
-- Snakkeboblen har en liten spiss som peker opp mot statusteksten. Skjer to ting samtidig (f.eks. katten og en sekser), bestemmer det første fargen.
-- Når turen bytter, spretter den nye spilleren. Den spretter ikke igjen når samme spiller kaster på nytt (sekser eller 🎲).
-- Hover-effektene (løft og vekst) gjelder bare på enheter med mus, så de ikke «henger igjen» på telefon.
-- Når «Kast terningen» er deaktivert, er den grå, flat og står litt lavere, som om den er trykket ned.
-- På telefon er pillene litt mindre og står i rader under brettet.
-
-## Spillet til rotmappen (GitHub Pages)
-
-Spillet flyttes fra `docs/` til rotmappen, så GitHub Pages kan publisere fra roten og musikken i `assets/` blir med. (Publiserer Pages fra `docs/`, kommer man ikke til `assets/`, og musikken mangler på nettsiden.)
-
-- Flytt `docs/index.html`, `docs/style.css` og `docs/game.js` til rotmappen med `git mv`, og slett den tomme `docs/`-mappen. *(Laget.)*
-- Endre stien til musikken i `game.js` fra `'../assets/audio/tema.mp3'` til `'assets/audio/tema.mp3'`, og oppdater kommentaren over. *(Laget.)*
-- Sjekk at de andre stiene i `index.html` og `game.js` fortsatt stemmer. *(Laget. `style.css` og `game.js` ligger ved siden av `index.html`, og musikken er den eneste lydfilen – de andre lydene lages i nettleseren.)*
-- Oppdater stiene i denne filen og i `.claude/skills/github-flyt/SKILL.md`. *(Laget.)*
-- Etter merge: sett GitHub Pages til å publisere fra roten (Settings → Pages → Branch `main`, mappe `/ (root)`).
-
-## Fast «Kast terningen»-knapp
-
-«Kast terningen»-knappen flyttet seg når snakkeboblen dukket opp eller forsvant (opptil ca. 100 px), så den var vanskelig å treffe.
-
-- Snakkeboblen får en fast plass i sidepanelet (112 px høy), så terningen, knappen og emoji-knappene under står stille – med og uten boble, og også med de lengste tekstene (katten + sekser). *(Laget. Målt: knappen står på samme sted på PC, telefon og smal telefon på 320 px.)*
-- Boblen ser ut som før (farger, spiss, popp-inn). Når den er tom, er plassen tom. *(Laget.)*
-
-## Skjermbilder fra Playwright
-
-Playwright (via `.mcp.json`) brukes til å teste spillet i en ekte nettleser. Skjermbildene fra testene skal ligge i en egen mappe i prosjektet, så man kan se hvordan spillet så ut.
-
-- Lag mappen `skjermbilder/` og flytt skjermbildet fra Playwright-testen dit (`etter-5-kast.png`: 2 spillere etter 5 kast). *(Laget.)*
-- Lag `.gitignore` som holder `.playwright-mcp/` (Playwright sine loggfiler og midlertidige filer) utenfor git. *(Laget.)*
-- Ta med `.mcp.json`, så Playwright virker for prosjektet. *(Laget.)*
-- Playwright åpner ikke filer direkte (`file:`), så under testing startes en midlertidig webserver for prosjektmappen (Node, ingen pakker). Den er ikke en del av spillet.
-
-## Ny arbeidsflyt: test-branch, tester-subagent og format-hook
-
-Alle endringer skal gå til en egen `test`-branch før de kommer til `main`.
-
-- Jeg forklarer en oppgave. Claude lager issuet på GitHub og gjør alt derfra til endringen er merget i `test`: branch fra `test`, endringen, testing, commit, push, PR til `test`, merge og lukking av issuet.
-- `Closes #N` lukker bare issuet når en PR merges til `main`. Derfor lukker Claude issuet selv når PR-en er merget i `test`, med en kommentar om hvilken PR som løste det.
-- Endringer går fra `test` til `main` bare når jeg sier fra. Da lager Claude en PR fra `test` til `main`, viser hva som er med, og merger etter at jeg har sagt OK.
-- Testingen gjøres av en egen subagent, `tester`, som bruker Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`.
-- En hook retter filformatet hver gang Claude endrer en fil: Unix-linjeskift (LF), ingen mellomrom på slutten av linjer, og nøyaktig ett linjeskift til slutt i filen. Bare tekstfiler (HTML, CSS, JS, JSON, Markdown osv.), ikke lyd og bilder.
-- `.gitattributes` får git til å bruke LF, så advarslene «LF will be replaced by CRLF» forsvinner.
-- Regel 2 endres: Claude kan gjøre alt selv frem til merge i `test`, og viser oppsummering og diff etterpå. Jeg må si OK før noe går fra `test` til `main`.
-
-*(Laget: `test`-branchen, ny `SKILL.md`, subagenten `tester`, testserveren, hooken, `.gitattributes` og ny regel 2. Hooken er testet på en fil med CRLF og mellomrom på slutten. Tester-subagenten er prøvekjørt med Playwright: BESTÅTT, skjermbilder i `skjermbilder/15-pc.png` og `skjermbilder/15-telefon.png`. Første gang alle filene ble gjort om til LF, fikk `game.js` og `.mcp.json` et manglende linjeskift helt til slutt – ellers er koden uendret.)*
-
-## Playwright usynlig (headless)
-
-Playwright-nettleseren vistes på skjermen mens tester-subagenten testet, og klikk i vinduet kunne forstyrre testen.
-
-- Playwright startes med `--headless` i `.mcp.json`, så nettleseren kjører usynlig. Skjermbildene havner i `skjermbilder/` som før. *(Laget. Spillet er testet med tester-subagenten: BESTÅTT, `skjermbilder/17-pc.png` og `17-telefon.png`. Etter omstart av Claude Code er usynligheten bekreftet: `navigator.userAgent` inneholder «HeadlessChrome» (sjekket under testen av issue #19).)*
-- Endringen i `.mcp.json` virker først når Claude Code startes på nytt (da startes Playwright på nytt med den nye innstillingen).
-
-## Fane-ikon og DICE-MICE-logo
-
-- Fane-ikon (favicon): osten fra midten av brettet vises som ikon i nettleserfanen. Den ligger i `favicon.svg`. *(Laget.)*
-- Logo øverst på siden i stedet for teksten «Dice-Mice!»: «DICE-MICE». *(Laget.)*
-  - DICE er ostefarget (ost-gul) med ostehull og en mørkere osteaktig kant.
-  - MICE er musefarget (grå) med små musedetaljer: museører på M og en musehale på E.
-- Logoen vises på alle skjermene (startskjerm, spill og pall), tilpasser seg skjermbredden, og kan fortsatt leses av skjermlesere («Dice-Mice!»). *(Laget.)*
-
-Valg jeg (Claude) tok underveis:
-
-- Logoen er en SVG rett i `index.html`. Ostehullene er et mønster som fyller bokstavene, så hullene alltid er inni bokstavene uansett skrift.
-- Skriften er Arial Black (med reserveskrifter). Bredden på hvert ord er låst, så ørene havner over M og halen ved E også på maskiner med en annen skrift.
-- MICE er grå med en svak overgang (lysere øverst), som den grå musen. Bindestreken er brun.
-- Logoen er maks 460 px bred, og smalere på små skjermer.
-- Favicon-ikonet har litt tykkere kant enn osten på brettet, så den synes godt i den lille fanen. Testserveren kan nå vise SVG-filer.
-- Når fane-ikonet finnes, er favicon-feilen (404) i nettleserkonsollen borte.
-
-*(Testet med tester-subagenten: BESTÅTT. Skjermbilder i `skjermbilder/19-*.png`.)*
-
-## README.md
-
-`README.md` er det folk ser først når de åpner repoet på GitHub. Den skal være kort og ryddig, på norsk, og ha:
-
-- Logo eller tittel, og én setning om hva spillet er.
-- Lenke til spillet på GitHub Pages: https://kevhan05.github.io/Dice-Mice/
-- Et skjermbilde fra `skjermbilder/` – det som viser spillet best på PC.
-- Hvordan man spiller: kaste terning, spesialfeltene (⏩ ⏪ 🎲 katten), at sekser gir nytt kast, og pallen etter spillet.
-- Hvordan man kjører spillet lokalt.
-- At spillet er laget for å lære GitHub, med Claude Code.
-
-*(Laget. Logoen øverst er `skjermbilder/19-logo.png`, og skjermbildet er `skjermbilder/19-pc.png`. Spesialfeltene står i en tabell. Testet med tester-subagenten: BESTÅTT – bildene og lenken virker, og reglene i teksten stemmer med spillet.)*
-
-## Oppdatere tester-agenten
-
-`.claude/agents/tester.md` skal stemme med spillet slik det er nå:
-
-- Linjen om at `favicon.ico` mangler fjernes. Testeren sjekker i stedet at `favicon.svg` lastes uten feil (issue #19), og konsollen skal ha null feil.
-- Teksten om at brukeren kan klikke i nettleservinduet tas bort, siden Playwright kjører usynlig (issue #17).
-- Pallen: etter seier skjules «Kast terningen», og «Se pallen 🏆» (`#tilPallen`) vises. Beskriv hvordan man raskt setter opp en seier.
-- Flere nyttige spillvariabler og funksjoner (`antallSteg`, `ferdig`, `tomHendelse()` osv.).
-- Grunntesten sjekker også DICE-MICE-logoen (issue #19), musikk-knappen og at «Kast terningen» ikke flytter seg når snakkeboblen dukker opp (issue #11).
-- Skrivefeil rettes.
-
-*(Laget. Testet med de nye instruksjonene: BESTÅTT, skjermbilder i `skjermbilder/23-*.png`. To ting ble rettet etter testen: usynlig Chrome henter ikke fane-ikonet selv, så `favicon.svg` sjekkes med `fetch`; og knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.)*
+- **Rydde i CLAUDE.md** (issue #24) – pågår. Fase 3, 4 og 5, «Spillet til rotmappen», «Fast Kast terningen-knapp» og «Skjermbilder fra Playwright» merkes som ferdige. De ferdige seksjonene slås sammen til «Ferdig», og detaljene om hvordan ting er laget flyttes inn under «Valg i prototypen». Ingen regler, spillregler eller valg fjernes.
+- **Maler for issues og PR-er på GitHub** (issue #26) – planlagt:
+  - `.github/ISSUE_TEMPLATE/oppgave.md` med samme oppsett som issue-malen i github-flyt-skillen (Beskrivelse, Oppgaver, Ferdig når).
+  - `.github/ISSUE_TEMPLATE/feil.md` for feil: Hva skjedde, Hva forventet jeg, Hvordan gjenskape, Telefon eller PC.
+  - `.github/pull_request_template.md`: Hva og hvorfor, Hvordan testet, og en linje for «Closes #».
+  - github-flyt-skillen oppdateres så den bruker de samme malene, og så tester-subagenten bare kjøres når spillet kan være påvirket (endringer i `index.html`, `style.css`, `game.js`, `favicon.svg`, `assets/`, eller i selve testoppsettet). Andre endringer sjekker Claude selv.
 
 ## Senere (ikke lag før jeg ber om det)
 
