@@ -95,6 +95,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Fast «Kast terningen»-knapp – laget, venter på sjekk** (issue #11). Se under.
 - **Skjermbilder fra Playwright – laget, venter på sjekk** (issue #13). Se under.
 - **Ny arbeidsflyt (test-branch, tester-subagent, format-hook) – laget** (issue #15). Se under.
+- **Playwright usynlig (headless) – laget** (issue #17). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -201,6 +202,13 @@ Alle endringer skal gå til en egen `test`-branch før de kommer til `main`.
 - Regel 2 endres: Claude kan gjøre alt selv frem til merge i `test`, og viser oppsummering og diff etterpå. Jeg må si OK før noe går fra `test` til `main`.
 
 *(Laget: `test`-branchen, ny `SKILL.md`, subagenten `tester`, testserveren, hooken, `.gitattributes` og ny regel 2. Hooken er testet på en fil med CRLF og mellomrom på slutten. Tester-subagenten er prøvekjørt med Playwright: BESTÅTT, skjermbilder i `skjermbilder/15-pc.png` og `skjermbilder/15-telefon.png`. Første gang alle filene ble gjort om til LF, fikk `game.js` og `.mcp.json` et manglende linjeskift helt til slutt – ellers er koden uendret.)*
+
+## Playwright usynlig (headless)
+
+Playwright-nettleseren vistes på skjermen mens tester-subagenten testet, og klikk i vinduet kunne forstyrre testen.
+
+- Playwright startes med `--headless` i `.mcp.json`, så nettleseren kjører usynlig. Skjermbildene havner i `skjermbilder/` som før. *(Laget. Spillet er testet med tester-subagenten: BESTÅTT, `skjermbilder/17-pc.png` og `17-telefon.png`. Selve usynligheten sjekkes etter neste omstart av Claude Code: da skal `navigator.userAgent` inneholde «HeadlessChrome».)*
+- Endringen i `.mcp.json` virker først når Claude Code startes på nytt (da startes Playwright på nytt med den nye innstillingen).
 
 ## Senere (ikke lag før jeg ber om det)
 
