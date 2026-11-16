@@ -31,7 +31,9 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `.claude/agents/tester.md` – subagenten `tester`, som tester spillet med Playwright og tar skjermbilder
 - `.claude/agents/tilgjengelighet.md` – subagenten `tilgjengelighet`, som sjekker tastatur, skjermleser, kontrast, knappestørrelse på telefon og redusert bevegelse med Playwright (bare når jeg ber om det)
 - `.claude/test/server.js` – liten testserver (Node, ingen pakker) som viser spillet på `http://127.0.0.1:8123` for Playwright. Ikke en del av spillet.
-- `.claude/settings.json` og `.claude/hooks/rett-format.js` – hooken som retter filformatet hver gang Claude endrer en fil
+- `.claude/settings.json` – sier hvilke hooker som kjøres når Claude endrer en fil
+- `.claude/hooks/rett-format.js` – hooken som retter filformatet hver gang Claude endrer en fil
+- `.claude/hooks/sjekk-js.js` – hooken som sjekker .js-filer for syntaksfeil (`node --check`) hver gang Claude endrer en
 - `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører usynlig (`--headless`)
 - `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
 - `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
@@ -51,6 +53,7 @@ Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 - Issues og PR-er følger malene i `.github/` – både de Claude lager og de som lages for hånd på GitHub.
 - Subagenten `tilgjengelighet` kjøres bare når jeg ber om det, ikke på hver PR. Den rapporterer med det viktigste først og endrer ikke kode; det jeg vil rette, blir egne oppgaver.
 - En hook retter filformatet hver gang Claude endrer en fil: Unix-linjeskift (LF), ingen mellomrom på slutten av linjer, og nøyaktig ett linjeskift til slutt. Bare tekstfiler, ikke lyd og bilder.
+- En hook sjekker JavaScript hver gang Claude endrer en .js-fil: den kjører `node --check`, og er det en syntaksfeil, får Claude feilmeldingen tilbake med en gang (exit-kode 2) og retter den. Uten feil, og for andre filer, er den stille. Den står etter rett-format-hooken i `settings.json` (Claude Code kjører dem samtidig, men det spiller ingen rolle, fordi formatrettingen ikke endrer om koden er gyldig).
 
 ## Spillet
 
@@ -161,12 +164,13 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **README.md** (issue #22).
 - **Oppdatert tester-agent** (issue #23).
 - **Ryddet CLAUDE.md** (issue #24) – ferdige seksjoner samlet her, detaljene flyttet til «Valg i prototypen».
+- **Hook som sjekker JavaScript** (issue #31) – `sjekk-js.js` fanger syntaksfeil i .js-filer med en gang.
 - **Subagent for tilgjengelighet** (issue #30) – `tilgjengelighet` sjekker tastatur, skjermleser, kontrast, knappestørrelse og redusert bevegelse. Kjøres bare når jeg ber om det. Første rapport: `skjermbilder/30-*.png`.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
 
-- **Hook som sjekker JavaScript for feil** (issue #31) – planlagt. `.claude/hooks/sjekk-js.js` kjører `node --check` på .js-filer etter hver endring (PostToolUse på Write, Edit og MultiEdit, etter rett-format-hooken). Ved feil: exit-kode 2 og feilen på stderr, så Claude ser og retter den. Uten feil, og for andre filer: stille.
+- Ingenting akkurat nå.
 
 ## Senere (ikke lag før jeg ber om det)
 
