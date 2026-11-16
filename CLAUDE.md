@@ -155,10 +155,10 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **Fane-ikon og DICE-MICE-logo** (issue #19).
 - **README.md** (issue #22).
 - **Oppdatert tester-agent** (issue #23).
+- **Ryddet CLAUDE.md** (issue #24) – ferdige seksjoner samlet her, detaljene flyttet til «Valg i prototypen».
 
 ## Pågår og planlagt
 
-- **Rydde i CLAUDE.md** (issue #24) – pågår. Fase 3, 4 og 5, «Spillet til rotmappen», «Fast Kast terningen-knapp» og «Skjermbilder fra Playwright» merkes som ferdige. De ferdige seksjonene slås sammen til «Ferdig», og detaljene om hvordan ting er laget flyttes inn under «Valg i prototypen». Ingen regler, spillregler eller valg fjernes.
 - **Maler for issues og PR-er på GitHub** (issue #26) – planlagt:
   - `.github/ISSUE_TEMPLATE/oppgave.md` med samme oppsett som issue-malen i github-flyt-skillen (Beskrivelse, Oppgaver, Ferdig når).
   - `.github/ISSUE_TEMPLATE/feil.md` for feil: Hva skjedde, Hva forventet jeg, Hvordan gjenskape, Telefon eller PC.
