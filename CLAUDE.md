@@ -25,6 +25,8 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
 - `README.md` – presentasjonen av spillet på GitHub
 - `skjermbilder/` – skjermbilder fra Playwright-testene
+- `.github/ISSUE_TEMPLATE/oppgave.md` og `feil.md` – maler for nye issues på GitHub (oppgave og feil)
+- `.github/pull_request_template.md` – mal for nye PR-er på GitHub
 - `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave
 - `.claude/agents/tester.md` – subagenten `tester`, som tester spillet med Playwright og tar skjermbilder
 - `.claude/test/server.js` – liten testserver (Node, ingen pakker) som viser spillet på `http://127.0.0.1:8123` for Playwright. Ikke en del av spillet.
@@ -44,7 +46,8 @@ Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 - Jeg forklarer en oppgave. Claude lager issuet på GitHub og gjør alt derfra til endringen er merget i `test`: branch fra `test` (`<N>-<kort-beskrivelse>`), endringen, testing, commit (`<issue-tittel> #<N>`), push, PR til `test`, merge og lukking av issuet.
 - `Closes #N` lukker bare issuet når en PR merges til `main`. Derfor lukker Claude issuet selv når PR-en er merget i `test`, med en kommentar om hvilken PR som løste det.
 - Endringer går fra `test` til `main` bare når jeg sier fra. Da lager Claude en PR fra `test` til `main`, viser hva som er med, og merger etter at jeg har sagt OK.
-- Testingen gjøres av subagenten `tester` med Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`.
+- Testingen gjøres av subagenten `tester` med Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`. Den kjøres bare når noe i selve spillet kan være påvirket (`index.html`, `style.css`, `game.js`, `favicon.svg`, `assets/`) eller testoppsettet endres. Ellers sjekker Claude selv det som er endret.
+- Issues og PR-er følger malene i `.github/` – både de Claude lager og de som lages for hånd på GitHub.
 - En hook retter filformatet hver gang Claude endrer en fil: Unix-linjeskift (LF), ingen mellomrom på slutten av linjer, og nøyaktig ett linjeskift til slutt. Bare tekstfiler, ikke lyd og bilder.
 
 ## Spillet
@@ -156,14 +159,11 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **README.md** (issue #22).
 - **Oppdatert tester-agent** (issue #23).
 - **Ryddet CLAUDE.md** (issue #24) – ferdige seksjoner samlet her, detaljene flyttet til «Valg i prototypen».
+- **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
 
-- **Maler for issues og PR-er på GitHub** (issue #26) – planlagt:
-  - `.github/ISSUE_TEMPLATE/oppgave.md` med samme oppsett som issue-malen i github-flyt-skillen (Beskrivelse, Oppgaver, Ferdig når).
-  - `.github/ISSUE_TEMPLATE/feil.md` for feil: Hva skjedde, Hva forventet jeg, Hvordan gjenskape, Telefon eller PC.
-  - `.github/pull_request_template.md`: Hva og hvorfor, Hvordan testet, og en linje for «Closes #».
-  - github-flyt-skillen oppdateres så den bruker de samme malene, og så tester-subagenten bare kjøres når spillet kan være påvirket (endringer i `index.html`, `style.css`, `game.js`, `favicon.svg`, `assets/`, eller i selve testoppsettet). Andre endringer sjekker Claude selv.
+- Ingenting akkurat nå.
 
 ## Senere (ikke lag før jeg ber om det)
 
