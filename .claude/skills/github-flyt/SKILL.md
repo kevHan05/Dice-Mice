@@ -66,6 +66,8 @@ Rapporterer den **FEILET**: rett feilen og kjør testeren på nytt, til den rapp
 
 **Er spillet ikke endret** (for eksempel README, CLAUDE.md, maler, skillen eller hooken): sjekk selv det som er endret – at lenker og bilder finnes, at filer har riktig format (for eksempel gyldig JSON), og at innholdet stemmer med spillet. Skriv i PR-en hva du sjekket.
 
+**Tilgjengelighet:** subagenten **`tilgjengelighet`** (`subagent_type: "tilgjengelighet"`) sjekker tastatur, skjermleser, kontrast, knappestørrelse på telefon og prefers-reduced-motion. Den kjøres **bare når brukeren ber om det** – ikke på hver PR. Den bare rapporterer; vil brukeren rette noe av det den finner, blir det egne oppgaver.
+
 ## 5. Commit
 
 ```bash
