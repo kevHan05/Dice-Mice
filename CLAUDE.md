@@ -96,6 +96,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Skjermbilder fra Playwright – laget, venter på sjekk** (issue #13). Se under.
 - **Ny arbeidsflyt (test-branch, tester-subagent, format-hook) – laget** (issue #15). Se under.
 - **Playwright usynlig (headless) – laget** (issue #17). Se under.
+- **Fane-ikon og DICE-MICE-logo – laget** (issue #19). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -207,8 +208,27 @@ Alle endringer skal gå til en egen `test`-branch før de kommer til `main`.
 
 Playwright-nettleseren vistes på skjermen mens tester-subagenten testet, og klikk i vinduet kunne forstyrre testen.
 
-- Playwright startes med `--headless` i `.mcp.json`, så nettleseren kjører usynlig. Skjermbildene havner i `skjermbilder/` som før. *(Laget. Spillet er testet med tester-subagenten: BESTÅTT, `skjermbilder/17-pc.png` og `17-telefon.png`. Selve usynligheten sjekkes etter neste omstart av Claude Code: da skal `navigator.userAgent` inneholde «HeadlessChrome».)*
+- Playwright startes med `--headless` i `.mcp.json`, så nettleseren kjører usynlig. Skjermbildene havner i `skjermbilder/` som før. *(Laget. Spillet er testet med tester-subagenten: BESTÅTT, `skjermbilder/17-pc.png` og `17-telefon.png`. Etter omstart av Claude Code er usynligheten bekreftet: `navigator.userAgent` inneholder «HeadlessChrome» (sjekket under testen av issue #19).)*
 - Endringen i `.mcp.json` virker først når Claude Code startes på nytt (da startes Playwright på nytt med den nye innstillingen).
+
+## Fane-ikon og DICE-MICE-logo
+
+- Fane-ikon (favicon): osten fra midten av brettet vises som ikon i nettleserfanen. Den ligger i `favicon.svg`. *(Laget.)*
+- Logo øverst på siden i stedet for teksten «Dice-Mice!»: «DICE-MICE». *(Laget.)*
+  - DICE er ostefarget (ost-gul) med ostehull og en mørkere osteaktig kant.
+  - MICE er musefarget (grå) med små musedetaljer: museører på M og en musehale på E.
+- Logoen vises på alle skjermene (startskjerm, spill og pall), tilpasser seg skjermbredden, og kan fortsatt leses av skjermlesere («Dice-Mice!»). *(Laget.)*
+
+Valg jeg (Claude) tok underveis:
+
+- Logoen er en SVG rett i `index.html`. Ostehullene er et mønster som fyller bokstavene, så hullene alltid er inni bokstavene uansett skrift.
+- Skriften er Arial Black (med reserveskrifter). Bredden på hvert ord er låst, så ørene havner over M og halen ved E også på maskiner med en annen skrift.
+- MICE er grå med en svak overgang (lysere øverst), som den grå musen. Bindestreken er brun.
+- Logoen er maks 460 px bred, og smalere på små skjermer.
+- Favicon-ikonet har litt tykkere kant enn osten på brettet, så den synes godt i den lille fanen. Testserveren kan nå vise SVG-filer.
+- Når fane-ikonet finnes, er favicon-feilen (404) i nettleserkonsollen borte.
+
+*(Testet med tester-subagenten: BESTÅTT. Skjermbilder i `skjermbilder/19-*.png`.)*
 
 ## Senere (ikke lag før jeg ber om det)
 
