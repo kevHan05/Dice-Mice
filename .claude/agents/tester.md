@@ -60,7 +60,23 @@ Spillvariablene og funksjonene ligger globalt i `game.js`, så du kan lese og se
 
 Har man slått av animasjoner (`browser_emulate_media` med `reducedMotion: 'reduce'`), skal sprett og vipp være av. Test det hvis endringen gjelder animasjoner.
 
-## 4. Rapport
+## 4. Kort tilgjengelighetssjekk av det som er endret
+
+Sjekk tilgjengeligheten til **det som er endret** (nye eller endrede knapper, felt, tekster, farger og skjermer) – ikke hele spillet. Den fulle sjekken gjøres av subagenten `tilgjengelighet`, bare når brukeren ber om det.
+
+1. **Navn:** har nye eller endrede knapper, felt og bilder et forståelig navn for skjermleser (synlig tekst, `aria-label` eller `label`)? Se i `browser_snapshot`.
+2. **Tastatur:** kan de nås med Tab og brukes med Enter/mellomrom? Har de synlig fokus når de har fokus? (Tab fortsetter fra der fokus sist var. Last siden på nytt for å starte fra toppen, eller gi et element i nærheten fokus med `element.focus()` og bruk Tab / Shift+Tab derfra.) Les av med `browser_evaluate`: `() => { const e = document.activeElement; const s = getComputedStyle(e); return { element: e.tagName + (e.id ? '#' + e.id : ''), outline: s.outlineStyle + ' ' + s.outlineWidth, boxShadow: s.boxShadow }; }`
+3. **Fokus forsvinner ikke:** hvis endringen skjuler, deaktiverer eller bytter ut noe som kan ha fokus, eller bytter skjerm – hvor havner fokus etterpå? (`document.activeElement` skal ikke være `BODY`.)
+4. **Størrelse på telefon (390 × 844):** er nye eller endrede knapper og felt minst 44 × 44 px? (`getBoundingClientRect()`)
+5. **Kontrast:** har ny eller endret tekst minst 4,5 : 1 mot bakgrunnen (3 : 1 for stor tekst: minst 24 px, eller minst 18,7 px fet)? Deaktiverte knapper har ikke kontrastkrav. Skjulte elementer kan ikke måles – få dem frem først (for eksempel en seier for «Se pallen 🏆»). Kort utregning for ett element (bakgrunnen er nærmeste forelder med farge):
+   ```js
+   (velger) => { const e = document.querySelector(velger); const rgb = (s) => { const n = s.match(/[\d.]+/g).map(Number); return s.startsWith('color(') ? n.map((v) => v * 255) : n; }; const lum = ([r, g, b]) => [r, g, b].map((c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0); let b = e; while (b && /rgba\(.*, 0\)|transparent/.test(getComputedStyle(b).backgroundColor)) b = b.parentElement; const l1 = lum(rgb(getComputedStyle(e).color)), l2 = lum(rgb(b ? getComputedStyle(b).backgroundColor : 'rgb(255,255,255)')); return Math.round((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05) * 100) / 100; }
+   ```
+   (Vil du måle mange elementer på en gang, bruk den lengre funksjonen i `.claude/agents/tilgjengelighet.md`.)
+
+Les listen «Kjente tilgjengelighetsproblemer» i `CLAUDE.md` først. **Bare nye problemer som endringen lager, gjør testen FEILET.** Problemer som står på listen – eller som har nøyaktig samme årsak som noe på listen (for eksempel en ny knapp med samme oransje farge) – noteres kort i rapporten, men stopper ikke testen. Er du i tvil, nevn det som et mulig nytt problem uten å la testen feile. Er endringen bare logikk uten noe synlig eller noe man kan trykke på, skriv «Ingen synlige endringer å sjekke».
+
+## 5. Rapport
 
 Avslutt med en kort rapport:
 
@@ -78,6 +94,11 @@ Grunntest
 
 Endringen (<hva som ble testet>)
 - <sjekk>: ja/nei, <detaljer>
+
+Tilgjengelighet (det som er endret)
+- Navn / Tastatur og fokus / Fokus forsvinner ikke / Størrelse på telefon / Kontrast: ja/nei, <detaljer>
+- Nye problemer: ingen / <liste>
+- Kjente problemer (fra CLAUDE.md) som berører endringen: <liste eller «ingen»>
 
 Skjermbilder
 - skjermbilder/<N>-pc.png
