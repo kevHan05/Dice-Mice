@@ -97,6 +97,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Ny arbeidsflyt (test-branch, tester-subagent, format-hook) – laget** (issue #15). Se under.
 - **Playwright usynlig (headless) – laget** (issue #17). Se under.
 - **Fane-ikon og DICE-MICE-logo – laget** (issue #19). Se under.
+- **README.md – laget** (issue #22). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -229,6 +230,19 @@ Valg jeg (Claude) tok underveis:
 - Når fane-ikonet finnes, er favicon-feilen (404) i nettleserkonsollen borte.
 
 *(Testet med tester-subagenten: BESTÅTT. Skjermbilder i `skjermbilder/19-*.png`.)*
+
+## README.md
+
+`README.md` er det folk ser først når de åpner repoet på GitHub. Den skal være kort og ryddig, på norsk, og ha:
+
+- Logo eller tittel, og én setning om hva spillet er.
+- Lenke til spillet på GitHub Pages: https://kevhan05.github.io/Dice-Mice/
+- Et skjermbilde fra `skjermbilder/` – det som viser spillet best på PC.
+- Hvordan man spiller: kaste terning, spesialfeltene (⏩ ⏪ 🎲 katten), at sekser gir nytt kast, og pallen etter spillet.
+- Hvordan man kjører spillet lokalt.
+- At spillet er laget for å lære GitHub, med Claude Code.
+
+*(Laget. Logoen øverst er `skjermbilder/19-logo.png`, og skjermbildet er `skjermbilder/19-pc.png`. Spesialfeltene står i en tabell. Testet med tester-subagenten: BESTÅTT – bildene og lenken virker, og reglene i teksten stemmer med spillet.)*
 
 ## Senere (ikke lag før jeg ber om det)
 
