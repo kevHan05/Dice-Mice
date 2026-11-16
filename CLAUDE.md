@@ -5,7 +5,7 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 ## Regler for Claude (gjelder alltid)
 
 1. Følg reglene i denne filen.
-2. Vis meg alle endringer (diff) og vent på at jeg sier OK før du committer eller pusher.
+2. Alle endringer går til `test`-branchen først (følg github-flyt-skillen). Frem til merge i `test` gjør du alt selv, og viser meg oppsummering og diff etterpå. Før noe går fra `test` til `main`, skal du vise meg hva som er med og vente på at jeg sier OK.
 3. Ikke legg til funksjoner, filer eller avhengigheter jeg ikke har beskrevet. Spør heller først.
 4. Bruk bare vanlig HTML, CSS og JavaScript. Ingen rammeverk, biblioteker eller byggeverktøy.
 5. All informasjon om spillet og kriteriene skal stå i denne filen. Oppdater den når spillet endres.
@@ -22,12 +22,16 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `style.css` – utseende
 - `game.js` – brett, mus, ost, terning, spillogikk og lyd
 - `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
-- `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave: issue → branch (`<N>-<kort-beskrivelse>`) → commit (`<issue-tittel> #<N>`) → push → PR med `Closes #<N>` → merge
+- `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave: issue → branch fra `test` (`<N>-<kort-beskrivelse>`) → endring → testing med tester-subagenten → commit (`<issue-tittel> #<N>`) → push → PR til `test` → merge i `test` → lukk issuet. `test` → `main` bare når jeg sier fra.
+- `.claude/agents/tester.md` – subagenten `tester`, som tester spillet med Playwright etter hver endring og tar skjermbilder
+- `.claude/test/server.js` – liten testserver (Node, ingen pakker) som viser spillet på `http://127.0.0.1:8123` for Playwright. Ikke en del av spillet.
+- `.claude/settings.json` og `.claude/hooks/rett-format.js` – hooken som retter filformatet (LF, mellomrom, linjeskift til slutt) hver gang Claude endrer en fil
 - `.mcp.json` – oppsett for Playwright, som Claude bruker til å teste spillet i en ekte nettleser (krever Node.js)
 - `skjermbilder/` – skjermbilder fra Playwright-testene
 - `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
+- `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
 
-Git: `https://github.com/kevHan05/Dice-Mice.git`, gren `main`.
+Git: `https://github.com/kevHan05/Dice-Mice.git`. Grener: `main` (ferdig og publisert på GitHub Pages) og `test` (alle endringer samles her før `main`).
 
 ## Spillet
 
@@ -90,6 +94,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Spillet til rotmappen – laget, venter på sjekk** (issue #9). Se under.
 - **Fast «Kast terningen»-knapp – laget, venter på sjekk** (issue #11). Se under.
 - **Skjermbilder fra Playwright – laget, venter på sjekk** (issue #13). Se under.
+- **Ny arbeidsflyt (test-branch, tester-subagent, format-hook) – laget** (issue #15). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -182,6 +187,20 @@ Playwright (via `.mcp.json`) brukes til å teste spillet i en ekte nettleser. Sk
 - Lag `.gitignore` som holder `.playwright-mcp/` (Playwright sine loggfiler og midlertidige filer) utenfor git. *(Laget.)*
 - Ta med `.mcp.json`, så Playwright virker for prosjektet. *(Laget.)*
 - Playwright åpner ikke filer direkte (`file:`), så under testing startes en midlertidig webserver for prosjektmappen (Node, ingen pakker). Den er ikke en del av spillet.
+
+## Ny arbeidsflyt: test-branch, tester-subagent og format-hook
+
+Alle endringer skal gå til en egen `test`-branch før de kommer til `main`.
+
+- Jeg forklarer en oppgave. Claude lager issuet på GitHub og gjør alt derfra til endringen er merget i `test`: branch fra `test`, endringen, testing, commit, push, PR til `test`, merge og lukking av issuet.
+- `Closes #N` lukker bare issuet når en PR merges til `main`. Derfor lukker Claude issuet selv når PR-en er merget i `test`, med en kommentar om hvilken PR som løste det.
+- Endringer går fra `test` til `main` bare når jeg sier fra. Da lager Claude en PR fra `test` til `main`, viser hva som er med, og merger etter at jeg har sagt OK.
+- Testingen gjøres av en egen subagent, `tester`, som bruker Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`.
+- En hook retter filformatet hver gang Claude endrer en fil: Unix-linjeskift (LF), ingen mellomrom på slutten av linjer, og nøyaktig ett linjeskift til slutt i filen. Bare tekstfiler (HTML, CSS, JS, JSON, Markdown osv.), ikke lyd og bilder.
+- `.gitattributes` får git til å bruke LF, så advarslene «LF will be replaced by CRLF» forsvinner.
+- Regel 2 endres: Claude kan gjøre alt selv frem til merge i `test`, og viser oppsummering og diff etterpå. Jeg må si OK før noe går fra `test` til `main`.
+
+*(Laget: `test`-branchen, ny `SKILL.md`, subagenten `tester`, testserveren, hooken, `.gitattributes` og ny regel 2. Hooken er testet på en fil med CRLF og mellomrom på slutten. Tester-subagenten er prøvekjørt med Playwright: BESTÅTT, skjermbilder i `skjermbilder/15-pc.png` og `skjermbilder/15-telefon.png`. Første gang alle filene ble gjort om til LF, fikk `game.js` og `.mcp.json` et manglende linjeskift helt til slutt – ellers er koden uendret.)*
 
 ## Senere (ikke lag før jeg ber om det)
 
