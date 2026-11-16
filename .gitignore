@@ -1,0 +1,2 @@
+# Playwright sine loggfiler og midlertidige filer fra testing (skjermbildene ligger i skjermbilder/)
+.playwright-mcp/

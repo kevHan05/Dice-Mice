@@ -23,6 +23,9 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `game.js` – brett, mus, ost, terning, spillogikk og lyd
 - `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
 - `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave: issue → branch (`<N>-<kort-beskrivelse>`) → commit (`<issue-tittel> #<N>`) → push → PR med `Closes #<N>` → merge
+- `.mcp.json` – oppsett for Playwright, som Claude bruker til å teste spillet i en ekte nettleser (krever Node.js)
+- `skjermbilder/` – skjermbilder fra Playwright-testene
+- `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
 
 Git: `https://github.com/kevHan05/Dice-Mice.git`, gren `main`.
 
@@ -86,6 +89,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for:
 - **Fase 5: Sidepanelet – laget, venter på sjekk** (issue #7). Se under.
 - **Spillet til rotmappen – laget, venter på sjekk** (issue #9). Se under.
 - **Fast «Kast terningen»-knapp – laget, venter på sjekk** (issue #11). Se under.
+- **Skjermbilder fra Playwright – laget, venter på sjekk** (issue #13). Se under.
 
 ## Fase 2: Animasjon og UI
 
@@ -169,6 +173,15 @@ Spillet flyttes fra `docs/` til rotmappen, så GitHub Pages kan publisere fra ro
 
 - Snakkeboblen får en fast plass i sidepanelet (112 px høy), så terningen, knappen og emoji-knappene under står stille – med og uten boble, og også med de lengste tekstene (katten + sekser). *(Laget. Målt: knappen står på samme sted på PC, telefon og smal telefon på 320 px.)*
 - Boblen ser ut som før (farger, spiss, popp-inn). Når den er tom, er plassen tom. *(Laget.)*
+
+## Skjermbilder fra Playwright
+
+Playwright (via `.mcp.json`) brukes til å teste spillet i en ekte nettleser. Skjermbildene fra testene skal ligge i en egen mappe i prosjektet, så man kan se hvordan spillet så ut.
+
+- Lag mappen `skjermbilder/` og flytt skjermbildet fra Playwright-testen dit (`etter-5-kast.png`: 2 spillere etter 5 kast). *(Laget.)*
+- Lag `.gitignore` som holder `.playwright-mcp/` (Playwright sine loggfiler og midlertidige filer) utenfor git. *(Laget.)*
+- Ta med `.mcp.json`, så Playwright virker for prosjektet. *(Laget.)*
+- Playwright åpner ikke filer direkte (`file:`), så under testing startes en midlertidig webserver for prosjektmappen (Node, ingen pakker). Den er ikke en del av spillet.
 
 ## Senere (ikke lag før jeg ber om det)
 
