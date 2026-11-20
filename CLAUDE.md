@@ -77,7 +77,7 @@ Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 
 ### Ikke bestemt ennå
 
-- Stil/tema: dagens stil er valgt og skal beholdes – beige bakgrunn med ostehull, oransje og ost-gult, og tegneseriepreg (tykke kanter, runde former). Nye ting skal passe inn i den.
+- Stil/tema: dagens stil er valgt og skal beholdes – blå bakgrunn med ostehull (blå siden issue #38, før beige), oransje og ost-gult, og tegneseriepreg (tykke kanter, runde former). Nye ting skal passe inn i den.
 
 ## Valg i prototypen (foreløpige, kan endres)
 
@@ -135,7 +135,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Logo øverst: «DICE-MICE» som SVG rett i `index.html`. DICE er ost-gul med ostehull (et mønster som fyller bokstavene, så hullene alltid er inni dem) og brun osteaktig kant. MICE er grå med svak overgang (lysere øverst), museører på M og en rosa musehale på E. Bindestreken er brun.
 - Logoen bruker Arial Black (med reserveskrifter). Bredden på hvert ord er låst, så ørene og halen havner riktig også med en annen skrift. Den er maks 460 px bred, vises på alle skjermene og leses som «Dice-Mice!» av skjermlesere.
 - Fane-ikonet `favicon.svg` er osten fra brettet, med litt tykkere kant så den synes i den lille fanen.
-- Bakgrunn: rolige «ostehull» i litt mørkere beige, og en rund lys brettplate under spiralen.
+- Bakgrunn: lys himmelblå (#cfe3f5) med rolige «ostehull» i litt mørkere blått (issue #38). Brettplaten under spiralen, sidepanelet og startskjermen er fortsatt lyse, så alt står godt frem mot det blå.
 - Siden tilpasser seg både telefon og PC, og trykk fungerer som klikk.
 
 ### Lyd og musikk
@@ -186,6 +186,8 @@ Funnet av `tilgjengelighet` i issue #30, ikke rettet ennå. `tester` regner dem 
 ## Pågår og planlagt
 
 - **Rette tilgjengelighetsproblemene fra #30** (issue #35) – planlagt. Alt i «Kjente tilgjengelighetsproblemer» rettes uten å endre stilen: fokus som forsvinner, kontrasten på de oransje knappene, skjermleser (status, terning, brett), tydelig fokusramme, `aria-pressed` på valgknappene, 44 px på telefon og «Kast terningen» lettere å nå, og redusert bevegelse (ingen bue, ingen blinking). Testes med `tester` og den fulle `tilgjengelighet`-sjekken.
+
+- **Blå bakgrunn** (issue #38) – pågår. Bakgrunnen på siden blir blå i stedet for beige, med ostehull-mønsteret i blått. Resten av stilen (oransje, ost-gult, lyse kort) beholdes, og teksten skal fortsatt være lett å lese.
 
 ## Senere (ikke lag før jeg ber om det)
 
