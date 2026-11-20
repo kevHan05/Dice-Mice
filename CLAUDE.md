@@ -77,7 +77,7 @@ Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 
 ### Ikke bestemt ennå
 
-- Stil/tema: dagens stil er valgt og skal beholdes – beige bakgrunn med ostehull, oransje og ost-gult, og tegneseriepreg (tykke kanter, runde former). Nye ting skal passe inn i den.
+- Stil/tema: dagens stil er valgt og skal beholdes – blå bakgrunn med ostehull (blå siden issue #38, før beige), oransje og ost-gult, og tegneseriepreg (tykke kanter, runde former). Nye ting skal passe inn i den.
 
 ## Valg i prototypen (foreløpige, kan endres)
 
@@ -135,7 +135,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Logo øverst: «DICE-MICE» som SVG rett i `index.html`. DICE er ost-gul med ostehull (et mønster som fyller bokstavene, så hullene alltid er inni dem) og brun osteaktig kant. MICE er grå med svak overgang (lysere øverst), museører på M og en rosa musehale på E. Bindestreken er brun.
 - Logoen bruker Arial Black (med reserveskrifter). Bredden på hvert ord er låst, så ørene og halen havner riktig også med en annen skrift. Den er maks 460 px bred, vises på alle skjermene og leses som «Dice-Mice!» av skjermlesere.
 - Fane-ikonet `favicon.svg` er osten fra brettet, med litt tykkere kant så den synes i den lille fanen.
-- Bakgrunn: rolige «ostehull» i litt mørkere beige, og en rund lys brettplate under spiralen.
+- Bakgrunn: lys himmelblå (#cfe3f5) med rolige «ostehull» i litt mørkere blått (issue #38). Brettplaten under spiralen, sidepanelet og startskjermen er fortsatt lyse, så alt står godt frem mot det blå.
 - Siden tilpasser seg både telefon og PC, og trykk fungerer som klikk.
 
 ### Lyd og musikk
@@ -181,11 +181,13 @@ Funnet av `tilgjengelighet` i issue #30, ikke rettet ennå. `tester` regner dem 
 - **Kort tilgjengelighetssjekk i tester-agenten** (issue #34) – `tester` sjekker tilgjengeligheten til det som er endret. Bare nye problemer gjør testen FEILET.
 - **Hook som sjekker JavaScript** (issue #31) – `sjekk-js.js` fanger syntaksfeil i .js-filer med en gang.
 - **Subagent for tilgjengelighet** (issue #30) – `tilgjengelighet` sjekker tastatur, skjermleser, kontrast, knappestørrelse og redusert bevegelse. Kjøres bare når jeg ber om det. Første rapport: `skjermbilder/30-*.png`.
+- **Blå bakgrunn** (issue #38) – lys himmelblå med ostehull i blått. Testet: BESTÅTT, `skjermbilder/38-*.png`.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
 
 - **Rette tilgjengelighetsproblemene fra #30** (issue #35) – planlagt. Alt i «Kjente tilgjengelighetsproblemer» rettes uten å endre stilen: fokus som forsvinner, kontrasten på de oransje knappene, skjermleser (status, terning, brett), tydelig fokusramme, `aria-pressed` på valgknappene, 44 px på telefon og «Kast terningen» lettere å nå, og redusert bevegelse (ingen bue, ingen blinking). Testes med `tester` og den fulle `tilgjengelighet`-sjekken.
+
 
 ## Senere (ikke lag før jeg ber om det)
 
