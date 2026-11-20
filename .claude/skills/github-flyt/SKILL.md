@@ -1,6 +1,6 @@
 ---
 name: "github-flyt"
-description: "Følg flyten i Dice-Mice!: brukeren forklarer en oppgave → Claude lager issue på GitHub → branch fra test → endring → testing med tester-subagenten (Playwright) → commit → push → PR til test → merge i test → lukk issuet. Og test → main når brukeren sier fra. Bruk når brukeren beskriver en ny oppgave eller endring (selv om de bare sier «ny oppgave», «ny issue» eller «jeg vil legge til X»), eller vil sende test til main."
+description: "Følg flyten i Dice-Mice!: brukeren forklarer en oppgave → Claude lager issue på GitHub → branch fra test → endring → testing med tester-subagenten (Playwright) når spillet er endret → commit → push → PR til test → merge i test → lukk issuet. Og test → main når brukeren sier fra. Bruk når brukeren beskriver en ny oppgave eller endring (selv om de bare sier «ny oppgave», «ny issue» eller «jeg vil legge til X»), eller vil sende test til main."
 ---
 
 # GitHub-flyt for Dice-Mice!
@@ -15,20 +15,22 @@ Brukeren forklarer en oppgave med egne ord. Du gjør **alt** fra issue til merge
 
 ## 1. Issue
 
-Lag issuet på GitHub ut fra det brukeren forklarte, med `gh issue create`:
+Lag issuet på GitHub ut fra det brukeren forklarte, med `gh issue create --title "…" --body "…"`. Bruk samme oppsett som malene i `.github/ISSUE_TEMPLATE/` (de samme malene man får når man lager issue på GitHub):
 
-```markdown
-## Beskrivelse
-<hva og hvorfor, 1–2 setninger>
+- **Ny oppgave eller endring** – `oppgave.md`:
+  ```markdown
+  ## Beskrivelse
+  <hva og hvorfor, 1–2 setninger>
 
-## Oppgaver
-- [ ] <konkret oppgave>
-- [ ] <konkret oppgave>
+  ## Oppgaver
+  - [ ] <konkret oppgave>
+  - [ ] <konkret oppgave>
 
-## Ferdig når
-- <hvordan vi vet at det fungerer>
-- Testet med tester-subagenten (Playwright)
-```
+  ## Ferdig når
+  - <hvordan vi vet at det fungerer>
+  - Testet med tester-subagenten (Playwright), hvis spillet er endret
+  ```
+- **Feil i spillet** – `feil.md`: overskriftene *Hva skjedde*, *Hva forventet jeg*, *Hvordan gjenskape* (nummererte steg) og *Telefon eller PC*.
 
 Noter issue-nummeret (#N). Er noe i oppgaven helt uklart og kan bety flere ting, spør brukeren før du lager issuet – ellers ta et fornuftig valg og skriv det i CLAUDE.md under «Valg i prototypen».
 
@@ -52,13 +54,21 @@ git branch
 3. Hooken i `.claude/settings.json` retter filformatet automatisk hver gang du endrer en fil (LF-linjeskift, ingen mellomrom på slutten av linjer, ett linjeskift til slutt). Du trenger ikke gjøre det selv.
 4. Merk det som er laget med *(Laget.)* i CLAUDE.md.
 
-## 4. Testing med tester-subagenten
+## 4. Testing
 
-Kjør subagenten **`tester`** (Agent-verktøyet, `subagent_type: "tester"`). Den tester spillet i en ekte nettleser med Playwright og tar skjermbilder til `skjermbilder/`. Gi den:
+**Kjør tester-subagenten bare når spillet kan være påvirket** – det vil si når oppgaven endrer `index.html`, `style.css`, `game.js`, `favicon.svg` eller filer i `assets/`, eller selve testoppsettet (`.claude/agents/tester.md`, `.claude/test/server.js`, `.mcp.json`). Ellers er det ikke vits.
+
+Kjør da subagenten **`tester`** (Agent-verktøyet, `subagent_type: "tester"`). Den tester spillet i en ekte nettleser med Playwright og tar skjermbilder til `skjermbilder/`. Gi den:
 - issue-nummeret (brukes i navnet på skjermbildene),
 - hva som er endret, og hva den skal sjekke spesielt.
 
 Rapporterer den **FEILET**: rett feilen og kjør testeren på nytt, til den rapporterer **BESTÅTT**. Ikke gå videre til commit med en feilende test.
+
+**Er spillet ikke endret** (for eksempel README, CLAUDE.md, maler, skillen eller hooken): sjekk selv det som er endret – at lenker og bilder finnes, at filer har riktig format (for eksempel gyldig JSON), og at innholdet stemmer med spillet. Skriv i PR-en hva du sjekket.
+
+**Tilgjengelighet:**
+- `tester` gjør alltid en **kort tilgjengelighetssjekk av det som er endret** (navn, tastatur og fokus, størrelse på telefon, kontrast). Bare nye problemer som endringen lager, gjør testen FEILET; kjente problemer står i «Kjente tilgjengelighetsproblemer» i CLAUDE.md. Retter en oppgave et kjent problem, fjern det fra listen.
+- Den fulle sjekken, subagenten **`tilgjengelighet`** (`subagent_type: "tilgjengelighet"`), kjøres **bare når brukeren ber om det, eller når oppgaven handler om tilgjengelighet** – ikke på hver PR. Den bare rapporterer; vil brukeren rette noe av det den finner, blir det egne oppgaver.
 
 ## 5. Commit
 
@@ -74,14 +84,24 @@ Kjør `git status` før `git add .`, så ingenting uønsket blir med. Skjermbild
 
 ```bash
 git push -u origin <branch>
-gh pr create --base test --head <branch> --title "<issue-tittel>" --body "<kort hva og hvorfor>
+gh pr create --base test --head <branch> --title "<issue-tittel>" --body "<beskrivelse etter PR-malen>"
+```
 
-Løser #<N>"
+Beskrivelsen følger `.github/pull_request_template.md` (den samme malen man får når man lager PR på GitHub):
+
+```markdown
+## Hva og hvorfor
+<hva er endret, og hvorfor – kort>
+
+## Hvordan testet
+<tester-subagenten: BESTÅTT + skjermbilder – eller hva du sjekket selv hvis spillet ikke er endret>
+
+Løser #<N>
 ```
 
 PR-en skal alltid gå til **`test`**, aldri rett til `main`.
 
-Viktig: `Closes #N` lukker bare issuet når en PR merges til `main` (standard-branchen). Til `test` gjør den ingenting. Derfor står det «Løser #N» i beskrivelsen (det lager en lenke), og issuet lukkes for hånd i neste steg.
+Viktig: `Closes #N` lukker bare issuet når en PR merges til `main` (standard-branchen). Til `test` gjør den ingenting. Derfor står det «Løser #N» på Closes-linjen i PR-er til `test` (det lager en lenke), og issuet lukkes for hånd i neste steg.
 
 ## 7. Merge i test og lukk issuet
 
@@ -110,8 +130,10 @@ Når brukeren sier for eksempel «send test til main»:
 git switch test
 git pull
 git log --oneline main..test
-gh pr create --base main --head test --title "Fra test til main: <kort oppsummering>" --body "<liste over issuene og PR-ene som er med>"
+gh pr create --base main --head test --title "Fra test til main: <kort oppsummering>" --body "<beskrivelse etter PR-malen>"
 ```
+
+Beskrivelsen følger også PR-malen: under *Hva og hvorfor* listes issuene og PR-ene som er med, under *Hvordan testet* hva som ble testet i hver av dem, og til slutt én `Closes #N`-linje per issue (her virker Closes, fordi PR-en merges til `main`).
 
 Vis brukeren hva som er med (issuene og diffen `git diff main..test`), og **vent på OK**. Etter OK:
 
@@ -132,3 +154,5 @@ Ikke bruk `--delete-branch` her – `test` skal aldri slettes. De siste linjene 
 - Lage PR til `main` i stedet for `test`.
 - Tro at issuet lukkes av seg selv ved merge i `test` – det gjør det ikke.
 - Slette `test`-branchen ved merge til `main`.
+- Kjøre tester-subagenten når spillet ikke er endret – eller glemme den når det er det.
+- Glemme at malene i `.github/` (og endringer i dem) først dukker opp på GitHub når de ligger i `main`.

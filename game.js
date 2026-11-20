@@ -87,11 +87,13 @@ const brett = document.getElementById('brett');
 const statusTekst = document.getElementById('status');
 const hendelseTekst = document.getElementById('hendelse');
 const terning = document.getElementById('terning');
+const terningTekst = document.getElementById('terningTekst');   // usynlig tekst som skjermleseren leser opp
 const kastKnapp = document.getElementById('kast');
 const pallKnapp = document.getElementById('tilPallen');
 const spillerliste = document.getElementById('spillerliste');
 const reaksjoner = document.getElementById('reaksjoner');
 const resultat = document.getElementById('resultat');
+const resultatTittel = document.getElementById('resultatTittel');
 const pall = document.getElementById('pall');
 const spillIgjenKnapp = document.getElementById('spillIgjen');
 const lobbyKnapp = document.getElementById('tilLobby');
@@ -494,17 +496,30 @@ function tegnMusene() {
     tegnMus(kropp, spiller.farge, spiller.pynt);
     return g;
   });
+  beskrivBrettet();
+}
+
+// Forteller skjermleseren hvor musene står (brettet har role="img", så dette er det som leses)
+function beskrivBrettet() {
+  const plassering = spillere.map((spiller, i) => {
+    if (posisjoner[i] >= antallSteg) return `${spiller.navn} ved osten`;
+    if (posisjoner[i] === 0) return `${spiller.navn} på START`;
+    return `${spiller.navn} på felt ${posisjoner[i]} av ${antallSteg}`;
+  });
+  brett.setAttribute('aria-label', `Spillbrettet: ${plassering.join(', ')}.`);
 }
 
 // ---------- Bevegelse ----------
-// Ett hopp i en bue fra ett punkt til et annet
+// Ett hopp i en bue fra ett punkt til et annet.
+// Med redusert bevegelse glir musen rett til neste felt, uten bue.
 function hopp(g, fra, til) {
+  const bue = reduserBevegelse() ? 0 : HOPP_HOYDE;
   return new Promise((ferdigHopp) => {
     const start = performance.now();
     function ramme(naa) {
       const t = Math.min((naa - start) / HOPP_TID, 1);
       const x = fra.x + (til.x - fra.x) * t;
-      const y = fra.y + (til.y - fra.y) * t - Math.sin(t * Math.PI) * HOPP_HOYDE;
+      const y = fra.y + (til.y - fra.y) * t - Math.sin(t * Math.PI) * bue;
       g.setAttribute('transform', `translate(${x} ${y})`);
       if (t < 1) requestAnimationFrame(ramme);
       else ferdigHopp();
@@ -622,12 +637,13 @@ function visTerning(verdi) {
   terning.setAttribute('aria-label', verdi ? `Terningen viser ${verdi}` : 'Terningen');
 }
 
-// Terningen ruller og viser tilfeldige tall en liten stund
+// Terningen ruller og viser tilfeldige tall en liten stund.
+// Med redusert bevegelse står terningen stille i stedet for å blinke med tilfeldige tall.
 function trillTerning() {
   return new Promise((ferdigTrilla) => {
     terning.classList.add('triller');
     lyd.terning();
-    const bytt = setInterval(() => {
+    const bytt = reduserBevegelse() ? null : setInterval(() => {
       visTerning(1 + Math.floor(Math.random() * 6));
     }, 80);
     setTimeout(() => {
@@ -663,7 +679,8 @@ function visSpillerliste() {
       merke.className = 'merke-over';
       merke.textContent = '💤';
       merke.title = 'Står over neste runde';
-      rad.append(merke);
+      merke.setAttribute('aria-hidden', 'true');
+      rad.append(merke, lagSkjultTekst(' (står over neste runde)'));
     }
     if (i === tur) {
       rad.classList.add('aktiv');
@@ -673,11 +690,19 @@ function visSpillerliste() {
       merkelapp.className = 'din-tur';
       merkelapp.setAttribute('aria-hidden', 'true');
       merkelapp.textContent = '🎲 Din tur';
-      rad.append(merkelapp);
+      rad.append(merkelapp, lagSkjultTekst(' (har tur)'));
     }
     spillerliste.appendChild(rad);
   });
   sistVisteTur = tur;
+}
+
+// Tekst som bare skjermlesere får med seg (se .skjult-tekst i style.css)
+function lagSkjultTekst(tekst) {
+  const span = document.createElement('span');
+  span.className = 'skjult-tekst';
+  span.textContent = tekst;
+  return span;
 }
 
 function oppdaterStatus() {
@@ -714,12 +739,16 @@ function tomHendelse() {
 async function kastTerning() {
   if (ferdig || opptatt) return;
   opptatt = true;
-  kastKnapp.disabled = true;
+  // aria-disabled i stedet for disabled: knappen ser deaktivert ut og trykk avvises (opptatt),
+  // men den beholder fokus, så tastaturbrukere kan trykke Enter igjen etter kastet.
+  kastKnapp.setAttribute('aria-disabled', 'true');
   tomHendelse();
+  terningTekst.textContent = '';
 
   const kast = 1 + Math.floor(Math.random() * 6);
   await trillTerning();
   visTerning(kast);
+  terningTekst.textContent = `${spillere[tur].navn} slo ${kast}.`; // leses opp av skjermleseren
   await flyttMus(tur, Math.min(kast, antallSteg - posisjoner[tur]));
 
   // Spesialfelt (det nye feltet musen havner på etterpå, gjør ingenting)
@@ -754,7 +783,9 @@ async function kastTerning() {
     statusTekst.textContent = `${navn} kom først til osten og vant!`;
     visSpillerliste();
     kastKnapp.hidden = true;
+    kastKnapp.removeAttribute('aria-disabled');
     pallKnapp.hidden = false;
+    pallKnapp.focus(); // fokus flyttes til «Se pallen 🏆», så det ikke forsvinner med «Kast terningen»
     feirSeier(tur);
     return;
   }
@@ -763,7 +794,7 @@ async function kastTerning() {
     nesteTur().forEach((n) => leggTilHendelse(`😾 ${n} står over denne runden.`, 'over'));
   }
   oppdaterStatus();
-  kastKnapp.disabled = false;
+  kastKnapp.removeAttribute('aria-disabled');
 }
 
 // En emoji flyter opp over brettet
@@ -796,6 +827,7 @@ function visPallen() {
   const nr = feiringNr;
   spillet.hidden = true;
   resultat.hidden = false;
+  resultatTittel.focus(); // fokus til «Resultat», så det ikke forsvinner og skjermleseren sier hvor man er
   pall.innerHTML = '';
 
   // Vinneren først, så resten etter hvor langt de kom (lik plass: den som kastet først)
@@ -887,11 +919,16 @@ function visNavnefelt() {
 }
 
 function oppdaterValgknapper() {
+  // Den valgte knappen får både farge og aria-pressed, så skjermleseren sier hvilken som er valgt
   antallValg.querySelectorAll('button').forEach((knapp) => {
-    knapp.classList.toggle('valgt', Number(knapp.dataset.antall) === antallValgt);
+    const valgt = Number(knapp.dataset.antall) === antallValgt;
+    knapp.classList.toggle('valgt', valgt);
+    knapp.setAttribute('aria-pressed', String(valgt));
   });
   brettValg.querySelectorAll('button').forEach((knapp) => {
-    knapp.classList.toggle('valgt', knapp.dataset.brett === brettValgt);
+    const valgt = knapp.dataset.brett === brettValgt;
+    knapp.classList.toggle('valgt', valgt);
+    knapp.setAttribute('aria-pressed', String(valgt));
   });
 }
 
@@ -921,10 +958,11 @@ function startNyttSpill() {
   tur = 0;
   ferdig = false;
   opptatt = false;
-  kastKnapp.disabled = false;
+  kastKnapp.removeAttribute('aria-disabled');
   kastKnapp.hidden = false;
   pallKnapp.hidden = true;
   tomHendelse();
+  terningTekst.textContent = '';
   sistVisteTur = -1; // den første spilleren spretter inn når spillet starter
 
   startskjerm.hidden = true;
@@ -934,6 +972,9 @@ function startNyttSpill() {
   tegnMusene();
   visTerning(null);
   oppdaterStatus();
+  // Fokus til «Kast terningen», så det ikke forsvinner når startskjermen eller pallen skjules.
+  // preventScroll: siden skal ikke hoppe ned til knappen på telefon.
+  kastKnapp.focus({ preventScroll: true });
 }
 
 function tilbakeTilLobby() {
@@ -941,6 +982,8 @@ function tilbakeTilLobby() {
   resultat.hidden = true;
   spillet.hidden = true;
   startskjerm.hidden = false;
+  // Fokus til det valgte antallet spillere, øverst på startskjermen
+  antallValg.querySelector('button.valgt').focus();
 }
 
 antallValg.addEventListener('click', (hendelse) => {

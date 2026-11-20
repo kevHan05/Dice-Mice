@@ -10,6 +10,13 @@
             "command": "node \"$env:CLAUDE_PROJECT_DIR/.claude/hooks/rett-format.js\"",
             "timeout": 30,
             "statusMessage": "Retter filformat"
+          },
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "node \"$env:CLAUDE_PROJECT_DIR/.claude/hooks/sjekk-js.js\"",
+            "timeout": 30,
+            "statusMessage": "Sjekker JavaScript"
           }
         ]
       }
