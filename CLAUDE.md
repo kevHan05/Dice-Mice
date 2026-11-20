@@ -181,13 +181,13 @@ Funnet av `tilgjengelighet` i issue #30, ikke rettet ennå. `tester` regner dem 
 - **Kort tilgjengelighetssjekk i tester-agenten** (issue #34) – `tester` sjekker tilgjengeligheten til det som er endret. Bare nye problemer gjør testen FEILET.
 - **Hook som sjekker JavaScript** (issue #31) – `sjekk-js.js` fanger syntaksfeil i .js-filer med en gang.
 - **Subagent for tilgjengelighet** (issue #30) – `tilgjengelighet` sjekker tastatur, skjermleser, kontrast, knappestørrelse og redusert bevegelse. Kjøres bare når jeg ber om det. Første rapport: `skjermbilder/30-*.png`.
+- **Blå bakgrunn** (issue #38) – lys himmelblå med ostehull i blått. Testet: BESTÅTT, `skjermbilder/38-*.png`.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
 
 - **Rette tilgjengelighetsproblemene fra #30** (issue #35) – planlagt. Alt i «Kjente tilgjengelighetsproblemer» rettes uten å endre stilen: fokus som forsvinner, kontrasten på de oransje knappene, skjermleser (status, terning, brett), tydelig fokusramme, `aria-pressed` på valgknappene, 44 px på telefon og «Kast terningen» lettere å nå, og redusert bevegelse (ingen bue, ingen blinking). Testes med `tester` og den fulle `tilgjengelighet`-sjekken.
 
-- **Blå bakgrunn** (issue #38) – pågår. Bakgrunnen på siden blir blå i stedet for beige, med ostehull-mønsteret i blått. Resten av stilen (oransje, ost-gult, lyse kort) beholdes, og teksten skal fortsatt være lett å lese.
 
 ## Senere (ikke lag før jeg ber om det)
 
