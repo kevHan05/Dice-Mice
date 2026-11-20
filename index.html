@@ -63,16 +63,17 @@
   </header>
 
   <section id="startskjerm" class="startskjerm">
-    <p class="etikett">Antall spillere</p>
-    <div id="antallValg" class="antall-valg">
+    <!-- Valgknappene er grupper med navn, og den valgte har aria-pressed (settes i oppdaterValgknapper) -->
+    <p class="etikett" id="antallEtikett">Antall spillere</p>
+    <div id="antallValg" class="antall-valg" role="group" aria-labelledby="antallEtikett">
       <button type="button" data-antall="1">1</button>
       <button type="button" data-antall="2">2</button>
       <button type="button" data-antall="3">3</button>
       <button type="button" data-antall="4">4</button>
     </div>
 
-    <p class="etikett">Brett</p>
-    <div id="brettValg" class="antall-valg brett-valg">
+    <p class="etikett" id="brettEtikett">Brett</p>
+    <div id="brettValg" class="antall-valg brett-valg" role="group" aria-labelledby="brettEtikett">
       <button type="button" data-brett="kort">Kort</button>
       <button type="button" data-brett="vanlig">Vanlig</button>
       <button type="button" data-brett="lang">Lang</button>
@@ -87,17 +88,21 @@
 
   <main id="spillet" hidden>
     <div id="brettramme" class="brettramme">
-      <svg id="brett" viewBox="0 -30 700 730" aria-label="Spillbrettet"></svg>
+      <!-- role="img": skjermleseren leser beskrivelsen av brettet (hvor musene står), ikke bitene inni -->
+      <svg id="brett" viewBox="0 -30 700 730" role="img" aria-label="Spillbrettet"></svg>
     </div>
 
     <aside>
       <ul id="spillerliste" class="spillerliste" aria-label="Spillere"></ul>
-      <p id="status"></p>
+      <!-- aria-live: skjermleseren leser opp hvem som har tur og hvem som vant -->
+      <p id="status" aria-live="polite"></p>
       <!-- Fast plass til snakkeboblen, så knappene under ikke flytter seg -->
       <div class="hendelse-plass">
         <p id="hendelse" class="hendelse" aria-live="polite"></p>
       </div>
-      <div id="terning" class="terning" aria-live="polite"></div>
+      <div id="terning" class="terning" role="img" aria-label="Terningen"></div>
+      <!-- Usynlig tekst som leses opp når terningen har stoppet («Grå mus slo 4») -->
+      <p id="terningTekst" class="skjult-tekst" aria-live="polite"></p>
       <button id="kast">Kast terningen</button>
       <button id="tilPallen" type="button" hidden>Se pallen 🏆</button>
       <div id="reaksjoner" class="reaksjoner" role="group" aria-label="Send en reaksjon"></div>
@@ -105,7 +110,8 @@
   </main>
 
   <section id="resultat" class="resultat" hidden>
-    <h2>Resultat</h2>
+    <!-- tabindex="-1": overskriften får fokus når pallen vises, så skjermleseren sier «Resultat» -->
+    <h2 id="resultatTittel" tabindex="-1">Resultat</h2>
     <svg id="pall" viewBox="0 -20 460 290" role="img" aria-label="Resultat"></svg>
     <div class="resultatknapper">
       <button id="spillIgjen" type="button">Spill igjen</button>

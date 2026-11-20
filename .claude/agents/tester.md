@@ -33,8 +33,9 @@ Bruk vindusstørrelse 1280 × 860 (`browser_resize`).
 2. På startskjermen: 2 spillere og brettet «Vanlig» er forhåndsvalgt. Trykk «Start spillet». Bruk `browser_snapshot` for å finne knappene. Musikk-knappen skal da vise «🎵 Musikk på».
 3. Kast terningen 5 ganger med «Kast terningen» (`#kast`). Før første kast: noter hvor knappen står, med `document.getElementById('kast').offsetTop`. (Bruk `offsetTop`, ikke `getBoundingClientRect()`: knappen løftes litt ved hover og står lavere mens den er deaktivert, og det tar `getBoundingClientRect()` med selv om knappen ikke flytter seg.) Etter hvert kast: vent til knappen er klar igjen (den er deaktivert mens terningen ruller og musen hopper, ca. 2–6 sekunder). Vent med denne `browser_evaluate`:
    ```js
-   async () => { const k = document.getElementById('kast'); const t0 = Date.now(); while (k.disabled && Date.now() - t0 < 15000) await new Promise(r => setTimeout(r, 100)); return !k.disabled; }
+   async () => { const k = document.getElementById('kast'); const opptatt = () => k.disabled || k.getAttribute('aria-disabled') === 'true'; const t0 = Date.now(); while (opptatt() && Date.now() - t0 < 15000) await new Promise(r => setTimeout(r, 100)); return !opptatt(); }
    ```
+   (Mens terningen ruller, har knappen `aria-disabled="true"` i stedet for `disabled`, så den beholder fokus for tastaturbrukere.)
    Les så av med `browser_evaluate`:
    - tallet på terningen: `document.querySelectorAll('#terning .prikk').length`
    - hvem som har tur: `document.getElementById('status').textContent`

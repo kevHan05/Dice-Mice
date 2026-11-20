@@ -149,18 +149,20 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Playwright kjører usynlig (headless). Usynlig Chrome henter ikke fane-ikonet selv, så testeren sjekker `favicon.svg` med `fetch`. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
 - Skjermbildene fra testene heter `skjermbilder/<issue-nummer>-<navn>.png`.
 
+### Tilgjengelighet
+
+- Oransje knapper og «Din tur»-pillen har mørkebrun tekst (#3d2b08, ca. 6 : 1) i stedet for hvit. «🎲 Din tur»-merkelappen er mørkere brun (#7a5208). Deaktivert knapp har tekst #4a4a4a.
+- Tydelig fokusramme for tastatur (`:focus-visible`): 3 px mørkebrun ramme litt utenfor kanten.
+- «Kast terningen» bruker `aria-disabled` (ikke `disabled`) mens terningen ruller, så den beholder fokus. Fokus flyttes med vilje når skjermen bytter: til «Kast terningen» når spillet starter, til «Se pallen 🏆» ved seier, til overskriften «Resultat» på pallen, og til det valgte antallet spillere i lobbyen.
+- Skjermleser: statusteksten har `aria-live`, en usynlig tekst sier «<navn> slo <tall>.» etter hvert kast, brettet sier hvor musene står («Spillbrettet: Grå mus på felt 7 av 40, …»), spillerlisten har usynlig «(har tur)» og «(står over neste runde)», og antall-/brett-knappene er grupper med navn og `aria-pressed`.
+- Telefon: knapper og felt er minst 44 px høye, og på smal skjerm står terningen og «Kast terningen» side om side rett under statusteksten, med snakkeboblen under (uten spiss), så knappen synes uten å scrolle. Litt mer luft mellom emoji-knappene.
+- Redusert bevegelse: musene glir uten bue, og terningen blinker ikke mens den ruller.
+
 ### Kjente tilgjengelighetsproblemer
 
-Funnet av `tilgjengelighet` i issue #30, ikke rettet ennå. `tester` regner dem ikke som nye feil. Når et problem er rettet, fjernes det herfra.
+`tester` regner disse ikke som nye feil. Når et problem er rettet, fjernes det herfra.
 
-- Fokus forsvinner til `<body>` når «Kast terningen» blir deaktivert under et kast eller skjules ved seier, og når skjermen bytter (start → spill, «Se pallen 🏆» → pallen, lobbyen).
-- Hvit tekst på oransje (#e8a317) har kontrast 2,17 : 1. Gjelder alle knapper og piller med den fargen: «Start spillet», «Kast terningen», «Se pallen 🏆», «Spill igjen», valgte antall- og brett-knapper og navnet i «Din tur»-pillen. «🎲 Din tur»-merkelappen har 3,73 : 1.
-- Statusteksten («… sin tur», «… vant!») har ikke `aria-live`. Terningen har `aria-label` («Terningen viser 4»), men blir ikke lest opp av seg selv etter et kast.
-- Brettet forteller ikke skjermleser hvor musene står.
-- Fokusrammen er nettleserens tynne standard (1 px), ingen egen `:focus-visible`-stil.
-- Valgte antall- og brett-knapper vises bare med farge (ingen `aria-pressed`).
-- På telefon: lyd- og musikk-knappene (36 px), volumskyveren (16 px), navnefeltene (42 px) og pynt-listene (43 px) er under 44 px høye. «Kast terningen» og «Se pallen 🏆» ligger under skjermkanten.
-- Med redusert bevegelse hopper musene fortsatt i bue, og terningtallene blinker mens den ruller.
+- Ingen kjente akkurat nå. Problemene fra issue #30 er rettet i issue #35.
 
 ## Ferdig
 
@@ -182,12 +184,12 @@ Funnet av `tilgjengelighet` i issue #30, ikke rettet ennå. `tester` regner dem 
 - **Hook som sjekker JavaScript** (issue #31) – `sjekk-js.js` fanger syntaksfeil i .js-filer med en gang.
 - **Subagent for tilgjengelighet** (issue #30) – `tilgjengelighet` sjekker tastatur, skjermleser, kontrast, knappestørrelse og redusert bevegelse. Kjøres bare når jeg ber om det. Første rapport: `skjermbilder/30-*.png`.
 - **Blå bakgrunn** (issue #38) – lys himmelblå med ostehull i blått. Testet: BESTÅTT, `skjermbilder/38-*.png`.
+- **Rettet tilgjengelighetsproblemene fra #30** (issue #35) – fokus, kontrast, skjermleser, fokusramme, `aria-pressed`, 44 px og plassering på telefon, redusert bevegelse. Etter mitt ønske ble `tester` og `tilgjengelighet` hoppet over; Claude sjekket selv med usynlig Chrome (ingen feil, fokus og opplesning virker). Kjør gjerne `tilgjengelighet` senere for å bekrefte.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
 
-- **Rette tilgjengelighetsproblemene fra #30** (issue #35) – planlagt. Alt i «Kjente tilgjengelighetsproblemer» rettes uten å endre stilen: fokus som forsvinner, kontrasten på de oransje knappene, skjermleser (status, terning, brett), tydelig fokusramme, `aria-pressed` på valgknappene, 44 px på telefon og «Kast terningen» lettere å nå, og redusert bevegelse (ingen bue, ingen blinking). Testes med `tester` og den fulle `tilgjengelighet`-sjekken.
-
+- Ingenting akkurat nå.
 
 ## Senere (ikke lag før jeg ber om det)
 
