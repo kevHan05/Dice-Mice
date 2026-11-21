@@ -6,15 +6,15 @@
   display: none !important;
 }
 
-/* Bakgrunn: lys himmelblå med rolige ostehull i litt mørkere blått (issue #38) */
+/* Bakgrunn: beige med rolige ostehull i litt mørkere beige (tilbake fra blå i issue #44) */
 body {
   margin: 0;
   padding: 16px;
   font-family: system-ui, sans-serif;
-  background-color: #cfe3f5;
+  background-color: #f4efe3;
   background-image:
-    radial-gradient(circle, #bcd6ee 0 14px, transparent 15px),
-    radial-gradient(circle, #c4dbf1 0 8px, transparent 9px);
+    radial-gradient(circle, #ece2cb 0 14px, transparent 15px),
+    radial-gradient(circle, #efe7d4 0 8px, transparent 9px);
   background-size: 160px 160px, 110px 110px;
   background-position: 0 0, 55px 70px;
   color: #333;
