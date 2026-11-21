@@ -34,7 +34,7 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `.claude/settings.json` – sier hvilke hooker som kjøres når Claude endrer en fil
 - `.claude/hooks/rett-format.js` – hooken som retter filformatet hver gang Claude endrer en fil
 - `.claude/hooks/sjekk-js.js` – hooken som sjekker .js-filer for syntaksfeil (`node --check`) hver gang Claude endrer en
-- `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører usynlig (`--headless`)
+- `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører synlig (uten `--headless`), så jeg kan se testene, og bruker Microsoft Edge (`--browser msedge`), fordi Chrome ikke er installert
 - `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
 - `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
 
@@ -77,7 +77,7 @@ Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 
 ### Ikke bestemt ennå
 
-- Stil/tema: dagens stil er valgt og skal beholdes – blå bakgrunn med ostehull (blå siden issue #38, før beige), oransje og ost-gult, og tegneseriepreg (tykke kanter, runde former). Nye ting skal passe inn i den.
+- Stil/tema: dagens stil er valgt og skal beholdes – beige bakgrunn med ostehull (blå i issue #38, tilbake til beige i issue #44), oransje og ost-gult, og tegneseriepreg (tykke kanter, runde former). Nye ting skal passe inn i den.
 
 ## Valg i prototypen (foreløpige, kan endres)
 
@@ -135,7 +135,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Logo øverst: «DICE-MICE» som SVG rett i `index.html`. DICE er ost-gul med ostehull (et mønster som fyller bokstavene, så hullene alltid er inni dem) og brun osteaktig kant. MICE er grå med svak overgang (lysere øverst), museører på M og en rosa musehale på E. Bindestreken er brun.
 - Logoen bruker Arial Black (med reserveskrifter). Bredden på hvert ord er låst, så ørene og halen havner riktig også med en annen skrift. Den er maks 460 px bred, vises på alle skjermene og leses som «Dice-Mice!» av skjermlesere.
 - Fane-ikonet `favicon.svg` er osten fra brettet, med litt tykkere kant så den synes i den lille fanen.
-- Bakgrunn: lys himmelblå (#cfe3f5) med rolige «ostehull» i litt mørkere blått (issue #38). Brettplaten under spiralen, sidepanelet og startskjermen er fortsatt lyse, så alt står godt frem mot det blå.
+- Bakgrunn: beige (#f4efe3) med rolige «ostehull» i litt mørkere beige, og en rund lys brettplate under spiralen. Den var lys himmelblå i issue #38, og ble beige igjen i issue #44.
 - Siden tilpasser seg både telefon og PC, og trykk fungerer som klikk.
 
 ### Lyd og musikk
@@ -146,7 +146,8 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 ### Testing og verktøy
 
 - Playwright åpner ikke filer direkte (`file:`), så testene bruker testserveren i `.claude/test/server.js`. Den stopper av seg selv etter 5 minutter uten besøk.
-- Playwright kjører usynlig (headless). Usynlig Chrome henter ikke fane-ikonet selv, så testeren sjekker `favicon.svg` med `fetch`. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
+- Playwright kjører alltid synlig, så jeg kan se testene (før var den usynlig, fra issue #17). Den bruker Microsoft Edge, som følger med Windows (issue #45). Testeren sjekker `favicon.svg` med `fetch`, fordi fane-ikonet ikke alltid står i nettverkslisten. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
+- Ingen lyd når `tester` og `tilgjengelighet` tester: rett etter hver gang siden åpnes, setter de `musikk.muted = true` og gir spillet en lydkontekst uten utgang (`lydKontekst = new AudioContext({ sinkId: { type: 'none' } })`, issue #49). Lyd- og musikk-knappene virker som vanlig og lydkoden kjører, men ingenting høres. Spillet selv er ikke endret.
 - Skjermbildene fra testene heter `skjermbilder/<issue-nummer>-<navn>.png`.
 
 ### Tilgjengelighet
@@ -186,6 +187,9 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **Blå bakgrunn** (issue #38) – lys himmelblå med ostehull i blått. Testet: BESTÅTT, `skjermbilder/38-*.png`.
 - **Rettet tilgjengelighetsproblemene fra #30** (issue #35) – fokus, kontrast, skjermleser, fokusramme, `aria-pressed`, 44 px og plassering på telefon, redusert bevegelse. Etter mitt ønske ble `tester` og `tilgjengelighet` hoppet over; Claude sjekket selv med usynlig Chrome (ingen feil, fokus og opplesning virker). Kjør gjerne `tilgjengelighet` senere for å bekrefte.
 - **Ny flyt: jeg skriver issuet, Claude gjør resten** (issue #41) – Claude leser issuet og gjør alt til en PR fra `test` til `main` er klar. Jeg merger den, og issuene lukkes da av `Closes #N`.
+- **Playwright synlig og uten musikk under testing** (issue #45) – `--headless` er fjernet fra `.mcp.json`, Playwright bruker Edge (`--browser msedge`), og `tester` og `tilgjengelighet` demper musikken (`musikk.muted = true`) hver gang siden åpnes. Testet: BESTÅTT, `skjermbilder/45-*.png`.
+- **Ingen lyd når Playwright tester** (issue #49) – testagentene gjør også lydeffektene stille, med en lydkontekst uten utgang. Testet: BESTÅTT, `skjermbilder/49-*.png`.
+- **Beige bakgrunn igjen** (issue #44) – tilbake til den beige fra før #38 (#f4efe3 med ostehull i #ece2cb og #efe7d4). Resten av stilen og tilgjengelighetsrettingene fra #35 er beholdt. Testet: BESTÅTT, `skjermbilder/44-*.png`.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt

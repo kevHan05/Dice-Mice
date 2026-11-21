@@ -8,7 +8,7 @@ Du er testeren for Dice-Mice!, et terningspill i vanlig HTML, CSS og JavaScript 
 
 Du skal **bare teste**. Ikke endre spillfilene, CLAUDE.md eller noe annet i prosjektet – de eneste filene du lager, er skjermbilder i `skjermbilder/`. Finner du en feil, beskriv den så nøyaktig du kan (hva du gjorde, hva som skjedde, hva du forventet, feilmeldingen fra konsollen), så retter hovedagenten den.
 
-Playwright kjører usynlig (headless), så ingen andre kan klikke i nettleseren mens du tester.
+Playwright kjører synlig, så brukeren kan se nettleseren mens du tester. Brukeren skal bare se på, ikke klikke i den.
 
 ## 1. Start testserveren
 
@@ -24,10 +24,12 @@ Den svarer på `http://127.0.0.1:8123/`, stopper av seg selv etter 5 minutter ut
 
 Bruk vindusstørrelse 1280 × 860 (`browser_resize`).
 
-1. Åpne `http://127.0.0.1:8123/`. Sjekk:
+**Ingen lyd når du tester – verken musikk eller lydeffekter.** Rett etter at du har åpnet eller lastet siden på nytt (hver gang), kjør `browser_evaluate` med `() => { musikk.muted = true; lydKontekst = new AudioContext({ sinkId: { type: 'none' } }); }`. Da lastes sangen og lyd- og musikk-knappene virker som vanlig, men ingenting høres: musikken er dempet, og lydeffektene (terning, «boing», spesialfelt, fanfare) går til en lydkontekst uten høyttaler. Ikke bruk lyd- eller musikk-knappen til å skru lyden av – det endrer hvordan spillet oppfører seg.
+
+1. Åpne `http://127.0.0.1:8123/` og slå av all lyd (se over). Sjekk:
    - Konsollen (`browser_console_messages`, nivå `error`): det skal være **null** feil. Alle feil skal rapporteres.
    - At `assets/audio/tema.mp3` lastes med status 200 (`browser_network_requests`).
-   - At fane-ikonet `favicon.svg` (osten) virker. Usynlig (headless) Chrome henter ikke fane-ikonet selv, så det står ikke i `browser_network_requests`. Sjekk det med `browser_evaluate` i stedet: `async () => ({ status: (await fetch('/favicon.svg')).status, lenke: document.querySelector('link[rel~=icon]').getAttribute('href') })` – status skal være 200 og lenken `favicon.svg`.
+   - At fane-ikonet `favicon.svg` (osten) virker. Det står ikke alltid i `browser_network_requests`, så sjekk det med `browser_evaluate` i stedet: `async () => ({ status: (await fetch('/favicon.svg')).status, lenke: document.querySelector('link[rel~=icon]').getAttribute('href') })` – status skal være 200 og lenken `favicon.svg`.
    - At DICE-MICE-logoen vises øverst (`h1.logo`), og at tilgjengelighetstreet (`browser_snapshot`) viser den som «Dice-Mice!».
    - At musikk-knappen «🎵 Musikk av» og volumskyveren vises i toppen (de vises bare når sangfilen er lastet).
 2. På startskjermen: 2 spillere og brettet «Vanlig» er forhåndsvalgt. Trykk «Start spillet». Bruk `browser_snapshot` for å finne knappene. Musikk-knappen skal da vise «🎵 Musikk på».

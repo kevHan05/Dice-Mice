@@ -5,7 +5,8 @@
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
-        "--headless"
+        "--browser",
+        "msedge"
       ],
       "env": {}
     }
