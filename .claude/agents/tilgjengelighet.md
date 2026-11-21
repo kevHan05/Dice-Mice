@@ -18,7 +18,9 @@ Samme testserver som tester-agenten. Start den med PowerShell fra prosjektmappen
 Start-Process node -ArgumentList '.claude/test/server.js' -WindowStyle Hidden
 ```
 
-Den svarer på `http://127.0.0.1:8123/` og stopper av seg selv etter 5 minutter uten besøk. Playwright kjører usynlig (headless).
+Den svarer på `http://127.0.0.1:8123/` og stopper av seg selv etter 5 minutter uten besøk. Playwright kjører synlig, så brukeren kan se på.
+
+**Musikken skal ikke høres når du tester.** Rett etter at du har åpnet eller lastet siden på nytt (hver gang), kjør `browser_evaluate` med `() => { musikk.muted = true; }`. Musikk-knappen virker da som vanlig, men sangen er stille.
 
 Nyttig å vite om spillet: spillvariablene ligger globalt i `game.js` (`spillere`, `posisjoner`, `tur`, `antallSteg`, `ferdig` osv.). En seier settes opp med `posisjoner[tur] = antallSteg - 1` og et kast. Etter seier skjules «Kast terningen» (`#kast`), og «Se pallen 🏆» (`#tilPallen`) vises.
 
