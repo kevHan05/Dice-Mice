@@ -9,11 +9,12 @@ const BRETT = {
 };
 
 // Spiller 1 får første farge, spiller 2 den andre osv. Navnet brukes hvis spilleren ikke skriver inn noe.
+// prikk: fargen på prikkene på musens terning i en duell (lys på mørk mus, mørk på lys mus)
 const MUSER = [
-  { navn: 'Grå mus',   farge: '#9a9a9a' },
-  { navn: 'Brun mus',  farge: '#a0703c' },
-  { navn: 'Hvit mus',  farge: '#f5f5f5' },
-  { navn: 'Svart mus', farge: '#444444' },
+  { navn: 'Grå mus',   farge: '#9a9a9a', prikk: '#222' },
+  { navn: 'Brun mus',  farge: '#a0703c', prikk: '#fff' },
+  { navn: 'Hvit mus',  farge: '#f5f5f5', prikk: '#333' },
+  { navn: 'Svart mus', farge: '#444444', prikk: '#fff' },
 ];
 
 // Pynt musene kan ha på seg (velges på startskjermen)
@@ -34,6 +35,7 @@ const SPESIALFELT = {
   over:    { ikon: '😾', farge: '#c9d7f0', tekst: (n) => `${n} vekket katten! Den ble sur, og ${n} står over neste runde.` },
 };
 const SPESIAL_STEG = 3;            // hvor langt frem/tilbake spesialfeltene flytter musen
+const DUELL_STEG = 2;              // hvor langt vinneren av en duell går frem, og taperen tilbake
 const ANDEL_SPESIALFELT = 1 / 6;   // omtrent hvert sjette felt er et spesialfelt
 
 const REAKSJONER = ['👍', '😂', '😮', '😢', '🧀', '🎉'];
@@ -58,6 +60,8 @@ const KONFETTI_FARGER = ['#e8a317', '#7cc576', '#e89aa6', '#ffd54a', '#6fa8dc', 
 let spillere = [];      // fylles fra startskjermen: { navn, farge, pynt }
 let posisjoner = [];
 let staOver = [];       // sant for en spiller som må stå over neste runde
+let ankomst = [];       // når hver mus sist kom til feltet sitt (høyere = senere), så duellen velger den som kom sist
+let ankomstTeller = 0;
 let tur = 0;
 let ferdig = false;
 let opptatt = false;    // sant mens terningen ruller eller musen hopper
@@ -101,6 +105,11 @@ const lydKnapp = document.getElementById('lydKnapp');
 const musikkKnapp = document.getElementById('musikkKnapp');
 const volumValg = document.getElementById('volumValg');
 const volumSlider = document.getElementById('volum');
+const duellBoks = document.getElementById('duell');
+const duellTerninger = [...duellBoks.querySelectorAll('.duell-terning')];
+const duellNavn = [...duellBoks.querySelectorAll('.duell-navn')];
+const duellKnapper = [...duellBoks.querySelectorAll('.duell-kast')];
+const duellMelding = duellBoks.querySelector('.duell-melding');
 
 // ---------- Hjelpefunksjoner ----------
 function lag(type, attributter = {}, forelder = null) {
@@ -265,8 +274,17 @@ function hvese() {
   tone(220, 0, 0.35, { type: 'sawtooth', tilFrekvens: 160, volum: 0.05 });
 }
 
+// Ett sverd som slår mot et annet: et skarpt klakk og en metallisk klang som dør ut
+function sverdKling(start) {
+  klakk(start, { frekvens: 4200, volum: 0.35, varighet: 0.05 });
+  tone(1760, start, 0.35, { type: 'triangle', volum: 0.1, tilFrekvens: 1500 });
+  tone(2640, start, 0.2, { type: 'square', volum: 0.03 });
+}
+
 const lyd = {
   terning: () => terningRuller(TRILLE_TID / 1000),
+  duell: () => { sverdKling(0); sverdKling(0.22); },
+  duellSeier: () => [659, 880].forEach((f, i) => tone(f, i * 0.1, 0.18, { type: 'triangle', volum: 0.2 })),
   hopp: () => tone(320, 0, 0.12, { tilFrekvens: 640, volum: 0.12 }),
   frem: () => [523, 659, 784].forEach((f, i) => tone(f, i * 0.08, 0.15)),
   tilbake: () => [784, 659, 523].forEach((f, i) => tone(f, i * 0.08, 0.15)),
@@ -434,6 +452,8 @@ function tegnMus(g, farge, pynt = 'ingen') {
   lag('circle', { cx: 15, cy: -2, r: 8, fill: farge, stroke: '#333', 'stroke-width': 1.5 }, g); // hode
   lag('circle', { cx: 18, cy: -4, r: 1.6, fill: '#222' }, g); // øye
   lag('circle', { cx: 23, cy: -1, r: 1.8, fill: '#e89aa6' }, g); // nese
+  // Sint øyenbryn: vises bare under en duell (se .sint .mus-sint i style.css)
+  lag('path', { d: 'M 14.5 -9 L 21 -6.5', class: 'mus-sint', stroke: '#222', 'stroke-width': 1.8, 'stroke-linecap': 'round' }, g);
   tegnPynt(g, pynt);
 }
 
@@ -548,6 +568,7 @@ async function flyttMus(i, antallHopp, retning = 1) {
     await hopp(g, fra, til);
     fra = til;
   }
+  ankomst[i] = ++ankomstTeller;
   if (maalfelt) maalfelt.classList.remove('maalfelt');
   tegnMusene(); // plasserer musene pent igjen hvis flere står på samme felt
 }
@@ -627,31 +648,38 @@ const PRIKKER = {
   4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8],
 };
 
-function visTerning(verdi) {
-  terning.innerHTML = '';
+// Viser et tall på en terning (den vanlige, eller en av duellterningene).
+// navn er det skjermleseren kaller terningen. Duellterningene har navnet sitt i data-navn
+// («Grå mus sin terning»), så de heter det samme også mens de ruller.
+function visTerning(verdi, el = terning, navn = el.dataset.navn || 'Terningen') {
+  el.innerHTML = '';
   for (let i = 0; i < 9; i++) {
     const celle = document.createElement('div');
     if (verdi && PRIKKER[verdi].includes(i)) celle.className = 'prikk';
-    terning.appendChild(celle);
+    el.appendChild(celle);
   }
-  terning.setAttribute('aria-label', verdi ? `Terningen viser ${verdi}` : 'Terningen');
+  el.setAttribute('aria-label', verdi ? `${navn} viser ${verdi}` : navn);
 }
 
-// Terningen ruller og viser tilfeldige tall en liten stund.
-// Med redusert bevegelse står terningen stille i stedet for å blinke med tilfeldige tall.
-function trillTerning() {
+// Terningene ruller samtidig og viser tilfeldige tall en liten stund.
+// Med redusert bevegelse står de stille i stedet for å blinke med tilfeldige tall.
+function trillTerninger(terninger) {
   return new Promise((ferdigTrilla) => {
-    terning.classList.add('triller');
+    terninger.forEach((el) => el.classList.add('triller'));
     lyd.terning();
     const bytt = reduserBevegelse() ? null : setInterval(() => {
-      visTerning(1 + Math.floor(Math.random() * 6));
+      terninger.forEach((el) => visTerning(1 + Math.floor(Math.random() * 6), el));
     }, 80);
     setTimeout(() => {
       clearInterval(bytt);
-      terning.classList.remove('triller');
+      terninger.forEach((el) => el.classList.remove('triller'));
       ferdigTrilla();
     }, TRILLE_TID);
   });
+}
+
+function trillTerning() {
+  return trillTerninger([terning]);
 }
 
 // Viser hvem som er med, og hvem sin tur det er.
@@ -725,15 +753,150 @@ function nesteTur() {
 }
 
 // Legger en ny linje til teksten om hva som skjedde.
-// Typen (frem, tilbake, igjen, over) gir snakkeboblen farge; den første hendelsen bestemmer fargen.
+// Typen (frem, tilbake, igjen, over, duell) gir snakkeboblen farge; den første hendelsen bestemmer fargen.
+// Blir teksten for høy for den faste plassen (f.eks. ⏩ + duell + sekser med lange navn),
+// får boblen mindre skrift (først «liten», så «minst»), så «Kast terningen» under ikke flytter seg.
+// Høyden måles alltid med vanlig skrift først, så boblen ikke får for stor skrift når det kommer mer tekst.
+const BOBLE_STORRELSER = ['liten', 'minst'];
+
 function leggTilHendelse(tekst, type) {
   hendelseTekst.textContent = [hendelseTekst.textContent, tekst].join(' ').trim();
   if (!hendelseTekst.dataset.type) hendelseTekst.dataset.type = type;
+  const plass = parseFloat(getComputedStyle(hendelseTekst.parentNode).minHeight);
+  hendelseTekst.classList.remove(...BOBLE_STORRELSER);
+  for (const storrelse of BOBLE_STORRELSER) {
+    if (hendelseTekst.offsetHeight <= plass) break;
+    hendelseTekst.classList.remove(...BOBLE_STORRELSER);
+    hendelseTekst.classList.add(storrelse);
+  }
 }
 
 function tomHendelse() {
   hendelseTekst.textContent = '';
+  hendelseTekst.classList.remove(...BOBLE_STORRELSER);
   delete hendelseTekst.dataset.type;
+}
+
+// ---------- Museduell ----------
+// Finner musen som mus i skal duellere mot: en annen mus på det samme vanlige feltet
+// (ikke START, spesialfelt eller osten). Står flere der, er det den som kom sist. -1 = ingen duell.
+function finnMotstander(i) {
+  const felt = posisjoner[i];
+  if (felt <= 0 || felt >= antallSteg || spesial[felt]) return -1;
+  let motstander = -1;
+  posisjoner.forEach((p, j) => {
+    if (j !== i && p === felt && (motstander < 0 || ankomst[j] > ankomst[motstander])) motstander = j;
+  });
+  return motstander;
+}
+
+// Musene i duellen stiller seg side om side på feltet og snur seg mot hverandre:
+// den som har tur (a) står til venstre og ser mot høyre, motstanderen (b) står til høyre og speilvendes.
+// (Står flere mus på feltet, kan de ellers stå rett over hverandre.)
+// Så langt fra midten av feltet hver mus står. Nesen er ca. 25 fra midten av musen,
+// så 30 gir ca. 10 i luft mellom nesene: de ser på hverandre uten å røre hverandre.
+const DUELL_AVSTAND = 30;
+
+function stillOppTilDuell(a, b) {
+  const plass = plasser[posisjoner[a]];
+  const y = plass.y - 4;
+  museGrupper[a].setAttribute('transform', `translate(${plass.x - DUELL_AVSTAND} ${y})`);
+  museGrupper[b].setAttribute('transform', `translate(${plass.x + DUELL_AVSTAND} ${y}) scale(-1 1)`);
+  museGrupper[a].parentNode.appendChild(museGrupper[a]); // begge tegnes over andre mus på feltet
+  museGrupper[b].parentNode.appendChild(museGrupper[b]);
+}
+
+// Én runde i duellen: hver spiller trykker på sin egen «Kast»-knapp, i hvilken som helst rekkefølge.
+// Fokus starter på knappen til den som har tur (side 0) og flyttes til den andres når den første har kastet.
+// Gir tilbake de to tallene når begge har kastet.
+function duellRunde(sider) {
+  return new Promise((ferdigRunde) => {
+    const kast = [null, null];
+    duellKnapper.forEach((knapp, k) => {
+      knapp.removeAttribute('aria-disabled');
+      visTerning(null, duellTerninger[k]); // tom terning, så de gamle tallene ikke står igjen etter likt
+      knapp.onclick = async () => {
+        if (knapp.getAttribute('aria-disabled') === 'true') return; // allerede kastet (eller ruller)
+        knapp.setAttribute('aria-disabled', 'true');
+        const verdi = 1 + Math.floor(Math.random() * 6);
+        await trillTerninger([duellTerninger[k]]);
+        visTerning(verdi, duellTerninger[k]);
+        kast[k] = verdi;
+        const annen = 1 - k;
+        if (kast[annen] === null) {
+          // Bare det første kastet leses opp alene; det andre kommer i oppsummeringen etter runden
+          terningTekst.textContent = `${spillere[sider[k]].navn} slo ${verdi} i duellen.`;
+          if (duellKnapper[annen].getAttribute('aria-disabled') !== 'true') duellKnapper[annen].focus({ preventScroll: true });
+        } else {
+          ferdigRunde(kast);
+        }
+      };
+    });
+    duellKnapper[0].focus({ preventScroll: true });
+  });
+}
+
+// To mus kaster hver sin terning. Høyest går DUELL_STEG frem, lavest like mange tilbake. Likt = kast på nytt.
+// Havner de på et spesialfelt eller hos en annen mus etterpå, skjer det ingenting.
+async function duell(a, b) {
+  const sider = [a, b];
+  const navnA = spillere[a].navn;
+  const navnB = spillere[b].navn;
+  sider.forEach((nr, k) => {
+    duellNavn[k].textContent = spillere[nr].navn;
+    duellKnapper[k].setAttribute('aria-label', `Kast for ${spillere[nr].navn}`);
+    duellTerninger[k].dataset.navn = `${spillere[nr].navn} sin terning`;
+    duellTerninger[k].style.setProperty('--terningfarge', spillere[nr].farge);
+    duellTerninger[k].style.setProperty('--prikkfarge', MUSER[nr].prikk);
+    museGrupper[nr].classList.add('sint'); // sinte øyenbryn og risting (se style.css)
+  });
+  stillOppTilDuell(a, b);
+  // Boksen legges på motsatt halvdel av brettet fra duellfeltet, så den ikke dekker musene
+  const iOvreHalvdel = plasser[posisjoner[a]].y < SENTER;
+  duellBoks.classList.toggle('nede', iOvreHalvdel);
+  duellBoks.classList.toggle('oppe', !iOvreHalvdel);
+  duellMelding.textContent = '';
+  duellBoks.hidden = false;
+  lyd.duell();
+  // Skjermleseren får vite at det er duell og mot hvem. Litt pause før fokus flyttes til
+  // kast-knappen, så meldingen ikke blir avbrutt.
+  terningTekst.textContent = `⚔️ Duell! ${navnA} mot ${navnB}. Hver spiller trykker på sin egen Kast-knapp.`;
+  await vent(600);
+
+  let kastA;
+  let kastB;
+  for (;;) {
+    [kastA, kastB] = await duellRunde(sider);
+    const oppsummering = `Duell: ${navnA} slo ${kastA}, ${navnB} slo ${kastB}.`;
+    if (kastA !== kastB) {
+      terningTekst.textContent = oppsummering;
+      break;
+    }
+    terningTekst.textContent = `${oppsummering} Likt – kast igjen!`;
+    duellMelding.textContent = 'Likt – kast igjen!';
+    await vent(900);
+    duellMelding.textContent = '';
+  }
+
+  const [vinner, taper] = kastA > kastB ? [a, b] : [b, a];
+  const frem = Math.min(DUELL_STEG, antallSteg - posisjoner[vinner]);
+  const tilbake = Math.min(DUELL_STEG, posisjoner[taper]);
+  // Skjermleseren får også vite hvordan musene flytter seg (det ser man ellers bare på brettet)
+  terningTekst.textContent += ` ${spillere[vinner].navn} vant og går ${frem} felt frem.`
+    + (tilbake ? ` ${spillere[taper].navn} går ${tilbake} felt tilbake.` : '');
+  duellMelding.textContent = `${spillere[vinner].navn} vant!`;
+  lyd.duellSeier();
+  await vent(1000);
+  // Fokus tilbake til «Kast terningen» før boksen skjules, så det ikke forsvinner med knappene
+  kastKnapp.focus({ preventScroll: true });
+  duellBoks.hidden = true;
+  tegnMusene(); // musene snur seg tilbake og blir glade/rolige igjen
+  leggTilHendelse(`⚔️ ${spillere[vinner].navn} vant duellen mot ${spillere[taper].navn}!`, 'duell');
+
+  await flyttMus(vinner, frem);
+  await flyttMus(taper, tilbake, -1);
+  // Vinneren hopper av glede (flyttMus tegner musene på nytt, så klassen settes etterpå)
+  if (posisjoner[vinner] < antallSteg) museGrupper[vinner].classList.add('glad');
 }
 
 async function kastTerning() {
@@ -770,23 +933,34 @@ async function kastTerning() {
     }
   }
 
+  // Museduell: ender musen på et vanlig felt der en annen mus står (også etter ⏩ eller ⏪)
+  const motstander = finnMotstander(tur);
+  if (motstander >= 0) await duell(tur, motstander);
+
+  // Den som er ved osten, har vunnet – i en duell kan det være en annen enn den som har tur
+  const vinnerNr = posisjoner.findIndex((p) => p >= antallSteg);
+
   // Slår man 6, får man kaste igjen (hver gang)
-  if (kast === 6 && !kastIgjen && posisjoner[tur] < antallSteg) {
+  if (kast === 6 && !kastIgjen && vinnerNr < 0) {
     kastIgjen = true;
     leggTilHendelse(`🎲 ${navn} slo 6 og kaster igjen!`, 'igjen');
     lyd.igjen();
   }
   opptatt = false;
 
-  if (posisjoner[tur] === antallSteg) {
+  if (vinnerNr >= 0) {
     ferdig = true;
-    statusTekst.textContent = `${navn} kom først til osten og vant!`;
+    // Vinneren kan være motstanderen i en duell. tur settes til vinneren, så spillerlisten,
+    // prikken foran statusteksten og pallen (visPallen) viser riktig mus.
+    tur = vinnerNr;
+    statusTekst.textContent = `${spillere[vinnerNr].navn} kom først til osten og vant!`;
+    statusTekst.style.setProperty('--turfarge', spillere[vinnerNr].farge);
     visSpillerliste();
     kastKnapp.hidden = true;
     kastKnapp.removeAttribute('aria-disabled');
     pallKnapp.hidden = false;
     pallKnapp.focus(); // fokus flyttes til «Se pallen 🏆», så det ikke forsvinner med «Kast terningen»
-    feirSeier(tur);
+    feirSeier(vinnerNr);
     return;
   }
 
@@ -955,6 +1129,8 @@ function startNyttSpill() {
 
   posisjoner = spillere.map(() => 0);
   staOver = spillere.map(() => false);
+  ankomst = spillere.map(() => 0);
+  ankomstTeller = 0;
   tur = 0;
   ferdig = false;
   opptatt = false;
@@ -963,6 +1139,7 @@ function startNyttSpill() {
   pallKnapp.hidden = true;
   tomHendelse();
   terningTekst.textContent = '';
+  duellBoks.hidden = true;
   sistVisteTur = -1; // den første spilleren spretter inn når spillet starter
 
   startskjerm.hidden = true;

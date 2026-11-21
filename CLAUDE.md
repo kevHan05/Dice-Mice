@@ -109,6 +109,22 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
   - Ikke på START, første felt eller feltet rett før osten. Havner man på et nytt spesialfelt etter ⏩ eller ⏪, skjer det ingenting.
   - Hva som skjedde, står i en snakkeboble under «… sin tur».
 
+### Museduell (issue #51)
+
+- Ender musen som har tur på et vanlig felt der en annen mus står, blir det duell. Ikke på START, spesialfelt eller osten.
+- Duellen gjelder også når musen havner på feltet etter ⏩ eller ⏪.
+- Står flere mus der, duellerer man mot den som kom dit sist (`ankomst`).
+- En boks «⚔️ Duell!» vises over brettet med to terninger, i fargen til hver mus og med navnet under. Den ligger på motsatt halvdel fra duellfeltet (nederst hvis feltet er i øvre halvdel, ellers øverst), så den ikke dekker musene. Etter likt blir terningene tomme igjen.
+- Hver spiller kaster sin egen terning med sin egen «Kast»-knapp under terningen (i hvilken som helst rekkefølge). Fokus går først til knappen til den som har tur, og så til den andres. Ved likt står det «Likt – kast igjen!», og begge må kaste på nytt. Etter duellen går fokus tilbake til «Kast terningen».
+- Under duellen stiller de to musene seg side om side på feltet og ser på hverandre. Den som har tur står til venstre, og motstanderen står til høyre, speilvendt. De rører ikke hverandre: det er ca. 10 i luft mellom nesene (`DUELL_AVSTAND` = 30).
+- Høyest går 2 felt frem, lavest 2 felt tilbake (`DUELL_STEG`), med hopp, vinneren først. Kommer vinneren til osten, vinner den spillet – også om det ikke var vinnerens tur.
+- Havner vinneren eller taperen på et spesialfelt eller hos en annen mus etterpå, skjer det ingenting (ingen ny duell).
+- Under duellen har begge musene sinte øyenbryn og rister. Vinneren hopper av glede etterpå. Med redusert bevegelse: sinte øyenbryn, men ingen risting eller hopping, og terningene blinker ikke.
+- Snakkeboblen (lilla) sier «⚔️ <vinner> vant duellen mot <taper>!». Slo musen 6, får den fortsatt kaste igjen etter duellen.
+- Lyd: to sverd som slår mot hverandre når duellen starter, og en kort, glad tone til vinneren.
+- Skjermleser (via `#terningTekst`): «⚔️ Duell! <A> mot <B>. Hver spiller trykker på sin egen Kast-knapp.» når duellen starter (fokus flyttes etter 0,6 sekunder, så meldingen ikke avbrytes), og «<navn> slo <tall> i duellen.» etter det første kastet. Når begge har kastet: «Duell: <A> slo <tall>, <B> slo <tall>.», fulgt av «Likt – kast igjen!» eller «<vinner> vant og går 2 felt frem. <taper> går 2 felt tilbake.». Kast-knappene heter «Kast for <navn>», og terningene «<navn> sin terning», også mens de ruller.
+- Blir snakkeboblen for høy for den faste plassen (f.eks. ⏩ + duell + sekser med lange navn), får den mindre skrift (`.hendelse.liten`, og ved veldig brede navn `.hendelse.minst`), så «Kast terningen» ikke flytter seg.
+
 ### Seier og etter spillet
 
 - Vinnermusen tar backflips ved osten, og konfetti faller over brettet i ca. 10 sekunder. Har man slått av animasjoner i operativsystemet, vises bare seiersteksten.
@@ -194,7 +210,10 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 
 ## Pågår og planlagt
 
-- Ingenting akkurat nå.
+- **Museduell** (issue #51) – pågår. Lander en mus på et vanlig felt der en annen mus står, blir det duell. Begge kaster hver sin terning (i musens farge) samtidig, i en boks over brettet. Høyest går 2 felt frem, lavest 2 felt tilbake, og likt gir nytt kast. Musene er sinte under duellen, og vinneren hopper av glede. Snakkeboblen sier hvem som vant, og duellen har egen lyd. Valgene jeg har tatt, står under «Museduell» i «Valg i prototypen». Testes med `tester` og `tilgjengelighet`.
+  - **Status (lagret 21.11.2026, branch `51-museduell`, ikke merget):** I tillegg til issuet ønsket jeg at hver spiller kaster sin egen terning, og at musene ser på hverandre uten å røre hverandre. `tester` er BESTÅTT (runde 3). `tilgjengelighet` fant ingenting som hindrer bruk, og de tre 🟠-funnene fra duellen er rettet etterpå: opplesning av duell og motstander, opplesning av likt, og boksen ligger oppe eller nede så den ikke dekker musene. Det samme gjelder tre 🟡-funn: navnet på terningen mens den ruller, tomme terninger etter likt, og ingen dobbel opplesning.
+  - **Gjenstår:** kjøre `tester` på nytt for disse siste rettingene, og så commit, PR til `test`, merge og PR fra `test` til `main`.
+  - **Venter på svar fra meg** (eldre funn, ikke fra duellen, kan bli egne issues): «Din tur»-pillen blir for bred på telefon med veldig brede navn (siden scroller sidelengs). Vinneren har fortsatt «Din tur» / «(har tur)» etter seier. Tekstene inni brett-SVG-en bør ha `aria-hidden`. Startskjermen mangler h2-overskrifter. Lite (12 px) skrift i `.hendelse.minst`.
 
 ## Senere (ikke lag før jeg ber om det)
 

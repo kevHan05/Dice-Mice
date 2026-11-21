@@ -222,6 +222,20 @@ aside {
   transform: translateX(-50%) rotate(45deg);
 }
 
+/* Mye tekst (tre hendelser med lange navn): mindre skrift, så boblen holder seg innenfor plassen */
+.hendelse.liten {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+/* Enda mer tekst (veldig brede navn): enda litt mindre, fortsatt fet og lett å lese */
+.hendelse.minst {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  line-height: 1.18;
+}
+
 .hendelse:empty {
   display: none;
 }
@@ -230,6 +244,7 @@ aside {
 .hendelse[data-type="tilbake"] { --boble-bakgrunn: #fbe1e1; --boble-kant: #e08585; }
 .hendelse[data-type="igjen"]   { --boble-bakgrunn: #fff3c4; --boble-kant: #e8a317; }
 .hendelse[data-type="over"]    { --boble-bakgrunn: #e3ebf8; --boble-kant: #8aa6d6; }
+.hendelse[data-type="duell"]   { --boble-bakgrunn: #efe6f8; --boble-kant: #a68bd1; }
 
 @keyframes popp-inn {
   0%   { opacity: 0; transform: scale(0.7); }
@@ -339,6 +354,134 @@ aside {
 @keyframes pust {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50%      { transform: translateY(-1.5px) rotate(-3deg); }
+}
+
+/* ---------- Museduell ---------- */
+/* Sinte øyenbryn vises bare under en duell, og musen rister (samme risting som den sure katten) */
+.mus-sint {
+  display: none;
+}
+
+.sint .mus-sint {
+  display: inline;
+}
+
+.sint .mus-kropp {
+  animation: rist 0.12s linear infinite;
+}
+
+/* Vinneren av duellen hopper av glede tre ganger */
+.glad .mus-kropp {
+  animation: glad-hopp 0.4s ease-out 3;
+}
+
+@keyframes glad-hopp {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-14px) rotate(-10deg); }
+}
+
+/* Duellboksen ligger over midten av brettet. Den ytre delen dekker brettet og
+   sentrerer boksen, så boksen selv kan «poppe inn» uten å miste plassen sin. */
+.duell {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  pointer-events: none;
+}
+
+/* Boksen ligger på motsatt halvdel av brettet fra duellfeltet, så den ikke dekker musene (se duell() i game.js) */
+.duell.oppe {
+  align-items: flex-start;
+}
+
+.duell.nede {
+  align-items: flex-end;
+}
+
+.duell-boks {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px 14px;
+  background: #fffaf0;
+  border: 4px solid #333;
+  border-radius: 22px;
+  box-shadow: 0 6px 0 #333;
+  animation: popp-inn 0.3s ease-out;
+  pointer-events: auto; /* kast-knappene skal kunne trykkes, selv om resten av .duell slipper klikk gjennom */
+}
+
+/* Hver spiller kaster sin egen terning i duellen */
+.duell-kast {
+  margin-top: auto; /* knappene står likt nederst, også når det ene navnet går over flere linjer */
+  min-height: 44px; /* stor nok å treffe på telefon */
+  padding: 6px 18px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Har spilleren kastet (eller terningen ruller), er knappen grå, som deaktiverte knapper ellers */
+.duell-kast[aria-disabled="true"] {
+  background: #bbb;
+  color: #4a4a4a;
+  cursor: default;
+}
+
+.duell-tittel {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #3a2f1a;
+}
+
+.duell-terninger {
+  display: flex;
+  gap: 18px;
+}
+
+.duell-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 96px;
+}
+
+/* Duellterningen har musens farge, med prikker som synes godt på den */
+.terning.duell-terning {
+  width: 64px;
+  height: 64px;
+  padding: 8px;
+  margin: 0;
+  background: var(--terningfarge, #fff);
+  border-width: 3px;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 #333;
+}
+
+.terning.duell-terning .prikk {
+  width: 12px;
+  height: 12px;
+  background: var(--prikkfarge, #333);
+}
+
+.duell-navn {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #3a2f1a;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.duell-melding {
+  margin: 0;
+  min-height: 1.35em;
+  font-weight: 700;
+  color: #3a2f1a;
 }
 
 /* ---------- Katten ved kattefeltet ---------- */
@@ -649,7 +792,10 @@ aside {
   .katt.sur .katt-kropp,
   .hendelse,
   .spillerliste li.aktiv.sprett,
-  .emoji-knapp.sprett {
+  .emoji-knapp.sprett,
+  .sint .mus-kropp,
+  .glad .mus-kropp,
+  .duell-boks {
     animation: none;
   }
 
@@ -736,6 +882,32 @@ aside {
   .terning .prikk {
     width: 13px;
     height: 13px;
+  }
+
+  /* Duellboksen må få plass på det lille brettet */
+  .duell-boks {
+    padding: 8px 12px 10px;
+    gap: 6px;
+  }
+
+  .duell-tittel {
+    font-size: 1.15rem;
+  }
+
+  .duell-side {
+    width: 80px;
+  }
+
+  .terning.duell-terning {
+    order: 0; /* ikke flytt under navnet, som «.terning { order: 3 }» lenger nede gjør med den vanlige terningen */
+    width: 52px;
+    height: 52px;
+    padding: 6px;
+  }
+
+  .terning.duell-terning .prikk {
+    width: 10px;
+    height: 10px;
   }
 
   .navnerad select {
