@@ -24,9 +24,9 @@ Den svarer på `http://127.0.0.1:8123/`, stopper av seg selv etter 5 minutter ut
 
 Bruk vindusstørrelse 1280 × 860 (`browser_resize`).
 
-**Musikken skal ikke høres når du tester.** Rett etter at du har åpnet eller lastet siden på nytt (hver gang), kjør `browser_evaluate` med `() => { musikk.muted = true; }`. Da lastes sangen og musikk-knappen virker som vanlig, men den er stille. Ikke bruk musikk-knappen til å skru den av – det endrer hvordan spillet oppfører seg.
+**Ingen lyd når du tester – verken musikk eller lydeffekter.** Rett etter at du har åpnet eller lastet siden på nytt (hver gang), kjør `browser_evaluate` med `() => { musikk.muted = true; lydKontekst = new AudioContext({ sinkId: { type: 'none' } }); }`. Da lastes sangen og lyd- og musikk-knappene virker som vanlig, men ingenting høres: musikken er dempet, og lydeffektene (terning, «boing», spesialfelt, fanfare) går til en lydkontekst uten høyttaler. Ikke bruk lyd- eller musikk-knappen til å skru lyden av – det endrer hvordan spillet oppfører seg.
 
-1. Åpne `http://127.0.0.1:8123/` og demp musikken (se over). Sjekk:
+1. Åpne `http://127.0.0.1:8123/` og slå av all lyd (se over). Sjekk:
    - Konsollen (`browser_console_messages`, nivå `error`): det skal være **null** feil. Alle feil skal rapporteres.
    - At `assets/audio/tema.mp3` lastes med status 200 (`browser_network_requests`).
    - At fane-ikonet `favicon.svg` (osten) virker. Det står ikke alltid i `browser_network_requests`, så sjekk det med `browser_evaluate` i stedet: `async () => ({ status: (await fetch('/favicon.svg')).status, lenke: document.querySelector('link[rel~=icon]').getAttribute('href') })` – status skal være 200 og lenken `favicon.svg`.
