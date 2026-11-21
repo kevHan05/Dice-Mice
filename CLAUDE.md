@@ -34,7 +34,7 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `.claude/settings.json` – sier hvilke hooker som kjøres når Claude endrer en fil
 - `.claude/hooks/rett-format.js` – hooken som retter filformatet hver gang Claude endrer en fil
 - `.claude/hooks/sjekk-js.js` – hooken som sjekker .js-filer for syntaksfeil (`node --check`) hver gang Claude endrer en
-- `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører usynlig (`--headless`)
+- `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører synlig (uten `--headless`), så jeg kan se testene, og bruker Microsoft Edge (`--browser msedge`), fordi Chrome ikke er installert
 - `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
 - `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
 
@@ -146,7 +146,8 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 ### Testing og verktøy
 
 - Playwright åpner ikke filer direkte (`file:`), så testene bruker testserveren i `.claude/test/server.js`. Den stopper av seg selv etter 5 minutter uten besøk.
-- Playwright kjører usynlig (headless). Usynlig Chrome henter ikke fane-ikonet selv, så testeren sjekker `favicon.svg` med `fetch`. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
+- Playwright kjører alltid synlig, så jeg kan se testene (før var den usynlig, fra issue #17). Den bruker Microsoft Edge, som følger med Windows (issue #45). Testeren sjekker `favicon.svg` med `fetch`, fordi fane-ikonet ikke alltid står i nettverkslisten. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
+- Musikken er dempet når `tester` og `tilgjengelighet` tester: rett etter hver gang siden åpnes, setter de `musikk.muted = true`. Sangen lastes og musikk-knappen virker som vanlig, men den høres ikke. Spillet selv er ikke endret.
 - Skjermbildene fra testene heter `skjermbilder/<issue-nummer>-<navn>.png`.
 
 ### Tilgjengelighet
@@ -186,11 +187,12 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **Blå bakgrunn** (issue #38) – lys himmelblå med ostehull i blått. Testet: BESTÅTT, `skjermbilder/38-*.png`.
 - **Rettet tilgjengelighetsproblemene fra #30** (issue #35) – fokus, kontrast, skjermleser, fokusramme, `aria-pressed`, 44 px og plassering på telefon, redusert bevegelse. Etter mitt ønske ble `tester` og `tilgjengelighet` hoppet over; Claude sjekket selv med usynlig Chrome (ingen feil, fokus og opplesning virker). Kjør gjerne `tilgjengelighet` senere for å bekrefte.
 - **Ny flyt: jeg skriver issuet, Claude gjør resten** (issue #41) – Claude leser issuet og gjør alt til en PR fra `test` til `main` er klar. Jeg merger den, og issuene lukkes da av `Closes #N`.
+- **Playwright synlig og uten musikk under testing** (issue #45) – `--headless` er fjernet fra `.mcp.json`, Playwright bruker Edge (`--browser msedge`), og `tester` og `tilgjengelighet` demper musikken (`musikk.muted = true`) hver gang siden åpnes. Testet: BESTÅTT, `skjermbilder/45-*.png`.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
 
-- Ingenting akkurat nå.
+- **Beige bakgrunn igjen** (issue #44) – pågår. Bakgrunnen går tilbake til den beige fra før issue #38 (#f4efe3 med ostehull i #ece2cb og #efe7d4). Resten av stilen og tilgjengelighetsrettingene fra #35 beholdes.
 
 ## Senere (ikke lag før jeg ber om det)
 
