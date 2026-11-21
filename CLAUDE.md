@@ -5,7 +5,7 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 ## Regler for Claude (gjelder alltid)
 
 1. Følg reglene i denne filen.
-2. Alle endringer går til `test`-branchen først (følg github-flyt-skillen). Frem til merge i `test` gjør du alt selv, og viser meg oppsummering og diff etterpå. Før noe går fra `test` til `main`, skal du vise meg hva som er med og vente på at jeg sier OK.
+2. Jeg skriver et issue på GitHub og ber deg lese det. Du gjør alt imellom selv (følg github-flyt-skillen): endringen, testing, PR til `test` og merge i `test`, og så en PR fra `test` til `main`. Deretter viser du meg oppsummering og diff. Det eneste jeg gjør, er å merge PR-en fra `test` til `main` på GitHub – du merger aldri til `main` selv.
 3. Ikke legg til funksjoner, filer eller avhengigheter jeg ikke har beskrevet. Spør heller først.
 4. Bruk bare vanlig HTML, CSS og JavaScript. Ingen rammeverk, biblioteker eller byggeverktøy.
 5. All informasjon om spillet og kriteriene skal stå i denne filen. Oppdater den når spillet endres.
@@ -46,9 +46,9 @@ Git: `https://github.com/kevHan05/Dice-Mice.git`. Grener:
 
 Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 
-- Jeg forklarer en oppgave. Claude lager issuet på GitHub og gjør alt derfra til endringen er merget i `test`: branch fra `test` (`<N>-<kort-beskrivelse>`), endringen, testing, commit (`<issue-tittel> #<N>`), push, PR til `test`, merge og lukking av issuet.
-- `Closes #N` lukker bare issuet når en PR merges til `main`. Derfor lukker Claude issuet selv når PR-en er merget i `test`, med en kommentar om hvilken PR som løste det.
-- Endringer går fra `test` til `main` bare når jeg sier fra. Da lager Claude en PR fra `test` til `main`, viser hva som er med, og merger etter at jeg har sagt OK.
+- Jeg skriver et issue på GitHub og sier «les issue #N». (Forklarer jeg en oppgave bare i chatten, lager Claude issuet selv.)
+- Claude gjør alt imellom: gjør `test` lik `main`, branch fra `test` (`<N>-<kort-beskrivelse>`), endringen, testing, commit (`<issue-tittel> #<N>`), push, PR til `test` og merge i `test`. Så lager (eller oppdaterer) Claude én PR fra `test` til `main` med alle issuene som er med.
+- Jeg merger PR-en fra `test` til `main` på GitHub. Den har én `Closes #N`-linje per issue, så issuene lukkes av seg selv da. Et åpent issue betyr altså «ikke ute på nettsiden ennå». (`Closes #N` virker bare ved merge til `main`, ikke til `test`.)
 - Testingen gjøres av subagenten `tester` med Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`. Den kjøres bare når noe i selve spillet kan være påvirket (`index.html`, `style.css`, `game.js`, `favicon.svg`, `assets/`) eller testoppsettet endres. Ellers sjekker Claude selv det som er endret.
 - Issues og PR-er følger malene i `.github/` – både de Claude lager og de som lages for hånd på GitHub.
 - `tester` gjør alltid en kort tilgjengelighetssjekk av det som er endret. Bare nye problemer gjør testen FEILET; kjente problemer står i «Kjente tilgjengelighetsproblemer».
@@ -185,6 +185,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **Subagent for tilgjengelighet** (issue #30) – `tilgjengelighet` sjekker tastatur, skjermleser, kontrast, knappestørrelse og redusert bevegelse. Kjøres bare når jeg ber om det. Første rapport: `skjermbilder/30-*.png`.
 - **Blå bakgrunn** (issue #38) – lys himmelblå med ostehull i blått. Testet: BESTÅTT, `skjermbilder/38-*.png`.
 - **Rettet tilgjengelighetsproblemene fra #30** (issue #35) – fokus, kontrast, skjermleser, fokusramme, `aria-pressed`, 44 px og plassering på telefon, redusert bevegelse. Etter mitt ønske ble `tester` og `tilgjengelighet` hoppet over; Claude sjekket selv med usynlig Chrome (ingen feil, fokus og opplesning virker). Kjør gjerne `tilgjengelighet` senere for å bekrefte.
+- **Ny flyt: jeg skriver issuet, Claude gjør resten** (issue #41) – Claude leser issuet og gjør alt til en PR fra `test` til `main` er klar. Jeg merger den, og issuene lukkes da av `Closes #N`.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
