@@ -16,6 +16,8 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 
 Åpne `index.html` i rotmappen i nettleseren. Ingen installasjon trengs. På nettet: https://kevhan05.github.io/Dice-Mice/
 
+Med Docker (issue #52): `docker build -t dice-mice .` og `docker run --rm -p 8080:80 dice-mice`, og åpne http://localhost:8080. Containeren er nginx (`nginx:1.27-alpine`) med bare spillfilene: `index.html`, `style.css`, `game.js`, `favicon.svg` og `assets/`. Legges det til nye filer som spillet trenger, må de også legges til i `Dockerfile`.
+
 ## Filer
 
 - `index.html` – siden (med DICE-MICE-logoen)
@@ -37,6 +39,7 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 - `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører synlig (uten `--headless`), så jeg kan se testene, og bruker Microsoft Edge (`--browser msedge`), fordi Chrome ikke er installert
 - `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
 - `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
+- `Dockerfile` – kjører spillet i en container med nginx (se «Kjøre spillet»). Ikke en del av selve spillet.
 
 ## Git og arbeidsflyt
 
@@ -190,6 +193,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **Playwright synlig og uten musikk under testing** (issue #45) – `--headless` er fjernet fra `.mcp.json`, Playwright bruker Edge (`--browser msedge`), og `tester` og `tilgjengelighet` demper musikken (`musikk.muted = true`) hver gang siden åpnes. Testet: BESTÅTT, `skjermbilder/45-*.png`.
 - **Ingen lyd når Playwright tester** (issue #49) – testagentene gjør også lydeffektene stille, med en lydkontekst uten utgang. Testet: BESTÅTT, `skjermbilder/49-*.png`.
 - **Beige bakgrunn igjen** (issue #44) – tilbake til den beige fra før #38 (#f4efe3 med ostehull i #ece2cb og #efe7d4). Resten av stilen og tilgjengelighetsrettingene fra #35 er beholdt. Testet: BESTÅTT, `skjermbilder/44-*.png`.
+- **Dockerfile** (issue #52) – spillet kan kjøres i en container med nginx. Bare spillfilene er med. Sjekket med `docker build` og `docker run`: spillfilene og musikken gir 200, og `.git`, `CLAUDE.md` og `skjermbilder/` gir 404.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 
 ## Pågår og planlagt
