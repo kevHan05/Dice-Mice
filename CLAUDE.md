@@ -254,12 +254,12 @@ Steg:
 2. ✅ Minimal server: `server.js` viser `public/`, og et kast i én fane vises i alle faner.
 3. ✅ Flytt spillreglene fra `game.js` til serveren (tur, terning, spesialfelt, duell, seier).
 4. ✅ Rom med kode, og startskjerm med «Opprett spill» og «Bli med».
-5. Test lokalt: to faner ✅ (Claude testet med Playwright: opprett/bli med, feil kode, brettvalg, kast, duell på tvers av faner, emoji, seier, pallen, «Spill igjen», en spiller som går – ingen konsollfeil, og 1000 simulerte spill gjennom `spillregler.js`). Telefon på samme Wi-Fi: gjenstår, det må jeg gjøre selv.
+5. Test lokalt: to faner ✅ (Claude testet med Playwright: opprett/bli med, feil kode, brettvalg, kast, duell på tvers av faner, emoji, seier, pallen, «Spill igjen», en spiller som går – ingen konsollfeil, og 1000 simulerte spill gjennom `spillregler.js`). Telefon på samme Wi-Fi: går ikke, fordi jeg jobber på en fjern-PC. I stedet testet Claude med Playwright, med en fane i telefonstørrelse i et eget nettleseroppsett (som en egen enhet). Ekte telefon testes når spillet er på Render.
 6. ✅ Ny `Dockerfile` med Node i stedet for nginx (`node:22-alpine`, port 3000). Sjekket med `docker build` og `docker run`: spillet og Socket.IO gir 200, og `server.js`, `spillregler.js`, `package.json` og `CLAUDE.md` gir 404.
-7. Ut på nettet: skyhosting som bygger fra `Dockerfile` (ikke valgt ennå). Venter.
+7. Ut på nettet: Render, gratisnivået (valgt 25.11.2026, fordi dette er for læring). Render bygger fra `Dockerfile` og setter `PORT` selv (`server.js` bruker `process.env.PORT`). Gratisnivået sovner etter ca. 15 minutter uten besøk, og første besøk etterpå tar under et minutt. Rommene ligger bare i minnet, så de forsvinner når serveren sovner eller startes på nytt. Jeg lager kontoen og kobler GitHub selv; Claude forklarer stegene. Venter.
 8. GitHub Pages: når `index.html` ikke lenger ligger i roten av `main`, slutter Pages-siden (`dice-mice.d.prodio.no`) å virke. Hva som skal skje med den (videresending eller slå av), bestemmes før merge til `main`. Venter.
 
-Ikke bestemt ennå: hvor serveren skal ligge på nettet, og om man skal kunne komme tilbake til samme spill etter å ha lastet siden på nytt.
+Ikke bestemt ennå: om man skal kunne komme tilbake til samme spill etter å ha lastet siden på nytt.
 
 «Kjøre spillet», «Filer», «Testing og verktøy», «Spillere og start», tester- og tilgjengelighet-agentene, github-flyt-skillen og README er oppdatert. Regel 4 var allerede oppdatert.
 
