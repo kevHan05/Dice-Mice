@@ -90,6 +90,25 @@
     <div id="brettramme" class="brettramme">
       <!-- role="img": skjermleseren leser beskrivelsen av brettet (hvor musene står), ikke bitene inni -->
       <svg id="brett" viewBox="0 -30 700 730" role="img" aria-label="Spillbrettet"></svg>
+      <!-- Duellboksen vises midt på brettet når to mus duellerer (se duell() i game.js) -->
+      <div id="duell" class="duell" hidden>
+        <div class="duell-boks" role="group" aria-label="Duell">
+          <p class="duell-tittel">⚔️ Duell!</p>
+          <div class="duell-terninger">
+            <div class="duell-side">
+              <div class="terning duell-terning" role="img"></div>
+              <span class="duell-navn"></span>
+              <button type="button" class="duell-kast">Kast</button>
+            </div>
+            <div class="duell-side">
+              <div class="terning duell-terning" role="img"></div>
+              <span class="duell-navn"></span>
+              <button type="button" class="duell-kast">Kast</button>
+            </div>
+          </div>
+          <p class="duell-melding"></p>
+        </div>
+      </div>
     </div>
 
     <aside>
