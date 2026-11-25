@@ -7,24 +7,29 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 1. Følg reglene i denne filen.
 2. Jeg skriver et issue på GitHub og ber deg lese det. Du gjør alt imellom selv (følg github-flyt-skillen): endringen, testing, PR til `test` og merge i `test`, og så en PR fra `test` til `main`. Deretter viser du meg oppsummering og diff. Det eneste jeg gjør, er å merge PR-en fra `test` til `main` på GitHub – du merger aldri til `main` selv.
 3. Ikke legg til funksjoner, filer eller avhengigheter jeg ikke har beskrevet. Spør heller først.
-4. Bruk bare vanlig HTML, CSS og JavaScript. Ingen rammeverk, biblioteker eller byggeverktøy.
+4. Bruk bare vanlig HTML, CSS og JavaScript. Ingen rammeverk, biblioteker eller byggeverktøy. Ett unntak: flerspiller-serveren (`server.js`) bruker Express og Socket.IO, se «Flerspiller over nettet» under «Pågår og planlagt». Selve spillet i nettleseren er fortsatt bare vanlig HTML, CSS og JavaScript.
 5. All informasjon om spillet og kriteriene skal stå i denne filen. Oppdater den når spillet endres.
 6. Skriv kode og kommentarer på norsk, slik resten av koden er (f.eks. `posisjoner`, `kastTerning`).
 7. Når vi planlegger noe nytt, skriv det inn i denne filen med en gang – før det lages.
 
 ## Kjøre spillet
 
-Åpne `index.html` i rotmappen i nettleseren. Ingen installasjon trengs. På nettet: https://kevhan05.github.io/Dice-Mice/
+Fra issue #56 trenger spillet serveren: `npm install` (første gang) og `npm start`, og åpne http://localhost:3000. Serveren skriver også ut adressen telefoner på samme Wi-Fi kan bruke (f.eks. `http://10.0.0.4:3000`). Krever Node.js. Å åpne `public/index.html` direkte virker ikke lenger.
 
-Med Docker (issue #52): `docker build -t dice-mice .` og `docker run --rm -p 8080:80 dice-mice`, og åpne http://localhost:8080. Containeren er nginx (`nginx:1.27-alpine`) med bare spillfilene: `index.html`, `style.css`, `game.js`, `favicon.svg` og `assets/`. Legges det til nye filer som spillet trenger, må de også legges til i `Dockerfile`.
+På nettet: https://kevhan05.github.io/Dice-Mice/ viser den gamle versjonen (samme maskin) fra `main` til `flerspiller` er merget. Hva som skjer med Pages-siden etterpå, er ikke bestemt ennå (steg 8 under «Flerspiller over nettet»).
+
+Med Docker (issue #52, byttet til Node i issue #56): `docker build -t dice-mice .` og `docker run --rm -p 3000:3000 dice-mice`, og åpne http://localhost:3000. Containeren er `node:22-alpine` med bare `package.json`, `package-lock.json`, `server.js`, `spillregler.js` og `public/`, og kjører som brukeren `node`. Legges det til nye filer som serveren trenger, må de også legges til i `Dockerfile`. (Adressen «På samme Wi-Fi» som serveren skriver ut i containeren, er containerens egen og virker ikke fra telefonen; bruk PC-ens adresse.)
 
 ## Filer
 
-- `index.html` – siden (med DICE-MICE-logoen)
-- `style.css` – utseende
-- `game.js` – brett, mus, ost, terning, spillogikk og lyd
-- `favicon.svg` – fane-ikonet (osten)
-- `assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
+- `server.js` – flerspiller-serveren (Express og Socket.IO): viser `public/`, holder styr på rommene og sender hendelsene til alle i rommet
+- `spillregler.js` – spillreglene (tur, terning, spesialfelt, duell, seier). Brukes bare av serveren, og kan ikke lastes ned fra nettleseren.
+- `package.json` og `package-lock.json` – pakkene serveren trenger (`express`, `socket.io`) og `npm start`. `node_modules/` er ikke i git.
+- `public/index.html` – siden (med DICE-MICE-logoen, startskjermen og lobbyen)
+- `public/style.css` – utseende
+- `public/game.js` – brett, mus, ost, terning, animasjon, lyd og knapper. Spiller av hendelsene fra serveren.
+- `public/favicon.svg` – fane-ikonet (osten)
+- `public/assets/audio/tema.mp3` – bakgrunnsmusikken (SUNO-sangen)
 - `README.md` – presentasjonen av spillet på GitHub
 - `skjermbilder/` – skjermbilder fra Playwright-testene
 - `.github/ISSUE_TEMPLATE/oppgave.md` og `feil.md` – maler for nye issues på GitHub (oppgave og feil)
@@ -32,14 +37,13 @@ Med Docker (issue #52): `docker build -t dice-mice .` og `docker run --rm -p 808
 - `.claude/skills/github-flyt/SKILL.md` – GitHub-flyten Claude følger for hver oppgave
 - `.claude/agents/tester.md` – subagenten `tester`, som tester spillet med Playwright og tar skjermbilder
 - `.claude/agents/tilgjengelighet.md` – subagenten `tilgjengelighet`, som sjekker tastatur, skjermleser, kontrast, knappestørrelse på telefon og redusert bevegelse med Playwright (bare når jeg ber om det)
-- `.claude/test/server.js` – liten testserver (Node, ingen pakker) som viser spillet på `http://127.0.0.1:8123` for Playwright. Ikke en del av spillet.
 - `.claude/settings.json` – sier hvilke hooker som kjøres når Claude endrer en fil
 - `.claude/hooks/rett-format.js` – hooken som retter filformatet hver gang Claude endrer en fil
 - `.claude/hooks/sjekk-js.js` – hooken som sjekker .js-filer for syntaksfeil (`node --check`) hver gang Claude endrer en
 - `.mcp.json` – oppsett for Playwright (krever Node.js), som kjører synlig (uten `--headless`), så jeg kan se testene, og bruker Microsoft Edge (`--browser msedge`), fordi Chrome ikke er installert
-- `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) utenfor git
+- `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) og `node_modules/` utenfor git
 - `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
-- `Dockerfile` – kjører spillet i en container med nginx (se «Kjøre spillet»). Ikke en del av selve spillet.
+- `Dockerfile` – kjører serveren i en container med Node (se «Kjøre spillet»)
 
 ## Git og arbeidsflyt
 
@@ -52,7 +56,7 @@ Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
 - Jeg skriver et issue på GitHub og sier «les issue #N». (Forklarer jeg en oppgave bare i chatten, lager Claude issuet selv.)
 - Claude gjør alt imellom: gjør `test` lik `main`, branch fra `test` (`<N>-<kort-beskrivelse>`), endringen, testing, commit (`<issue-tittel> #<N>`), push, PR til `test` og merge i `test`. Så lager (eller oppdaterer) Claude én PR fra `test` til `main` med alle issuene som er med.
 - Jeg merger PR-en fra `test` til `main` på GitHub. Den har én `Closes #N`-linje per issue, så issuene lukkes av seg selv da. Et åpent issue betyr altså «ikke ute på nettsiden ennå». (`Closes #N` virker bare ved merge til `main`, ikke til `test`.)
-- Testingen gjøres av subagenten `tester` med Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`. Den kjøres bare når noe i selve spillet kan være påvirket (`index.html`, `style.css`, `game.js`, `favicon.svg`, `assets/`) eller testoppsettet endres. Ellers sjekker Claude selv det som er endret.
+- Testingen gjøres av subagenten `tester` med Playwright: den åpner spillet i en ekte nettleser, klikker seg gjennom, sjekker at det ikke er feil og tar skjermbilder til `skjermbilder/`. Den kjøres bare når noe i selve spillet kan være påvirket (`public/`, `server.js`, `spillregler.js`) eller testoppsettet endres. Ellers sjekker Claude selv det som er endret.
 - Issues og PR-er følger malene i `.github/` – både de Claude lager og de som lages for hånd på GitHub.
 - `tester` gjør alltid en kort tilgjengelighetssjekk av det som er endret. Bare nye problemer gjør testen FEILET; kjente problemer står i «Kjente tilgjengelighetsproblemer».
 - Den fulle sjekken, subagenten `tilgjengelighet`, kjøres bare når jeg ber om det eller når oppgaven handler om tilgjengelighet, ikke på hver PR. Den rapporterer med det viktigste først og endrer ikke kode; det jeg vil rette, blir egne oppgaver.
@@ -88,11 +92,16 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 
 ### Spillere og start
 
-- Alle spiller på samme maskin. Antall spillere (1–4) velges på startskjermen (2 er forhåndsvalgt).
+- Hver spiller er på sin egen enhet (issue #56). Startskjermen har navn og pynt, «Opprett spill», og et kodefelt med «Bli med». Skrives koden feil, eller er spillet fullt eller allerede startet, står det en feilmelding under (leses opp av skjermleser).
+- «Opprett spill» lager et rom med en kode på 4 bokstaver (uten I og O, så de ikke forveksles med 1 og 0). Den som oppretter, er verten.
+- Lobbyen viser romkoden stort, spillerne (med «(deg)» og «👑 Vert»), brettvalget og «Start spillet». Bare verten kan velge brett og starte; de andre ser brettet verten har valgt (knappene er deaktivert) og «Venter på at verten starter spillet …».
+- 1–4 spillere: så mange som er i rommet når verten starter. Man kan ikke bli med i et spill som har startet.
 - Skriver en spiller ikke inn noe navn, brukes musens fargenavn (f.eks. «Grå mus»). Maks 20 tegn.
-- Musene har hver sin farge: grå, brun, hvit, svart. Ved siden av navnefeltet vises musen spilleren får.
+- Musene har hver sin farge: grå, brun, hvit, svart. Man får den første ledige fargen i rommet. På startskjermen vises den grå musen med pynten, fordi fargen ikke er kjent før man er i rommet.
 - Pynt (`PYNT`) velges i en liste ved siden av navnet: ingen pynt, partyhatt, krone, sløyfe eller briller.
-- Tre brett (`BRETT`): Kort (30 steg, 2 omganger), Vanlig (40 steg, 2,5 omganger, forhåndsvalgt) og Lang (55 steg, 3 omganger).
+- Tre brett (`BRETT` i `spillregler.js`): Kort (30 steg, 2 omganger), Vanlig (40 steg, 2,5 omganger, forhåndsvalgt) og Lang (55 steg, 3 omganger).
+- Lukker en spiller siden i lobbyen, forsvinner den fra rommet. Midt i spillet blir musen stående med «(har gått)» og blir litt gjennomsiktig, og turene til den hoppes over. Er den med i en duell, kaster serveren for den. Går verten, blir den neste spilleren vert. Når alle har gått, slettes rommet. Man kan ikke komme tilbake til samme spill etter å ha lastet siden på nytt.
+- Mister nettleseren forbindelsen til serveren, går den tilbake til startskjermen med meldingen «Forbindelsen til serveren ble brutt …».
 
 ### Terning og bevegelse
 
@@ -118,7 +127,7 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Duellen gjelder også når musen havner på feltet etter ⏩ eller ⏪.
 - Står flere mus der, duellerer man mot den som kom dit sist (`ankomst`).
 - En boks «⚔️ Duell!» vises over brettet med to terninger, i fargen til hver mus og med navnet under. Den ligger på motsatt halvdel fra duellfeltet (nederst hvis feltet er i øvre halvdel, ellers øverst), så den ikke dekker musene. Etter likt blir terningene tomme igjen.
-- Hver spiller kaster sin egen terning med sin egen «Kast»-knapp under terningen (i hvilken som helst rekkefølge). Fokus går først til knappen til den som har tur, og så til den andres. Ved likt står det «Likt – kast igjen!», og begge må kaste på nytt. Etter duellen går fokus tilbake til «Kast terningen».
+- Hver spiller kaster sin egen terning med sin egen «Kast»-knapp under terningen, på sin egen enhet (i hvilken som helst rekkefølge). Duellboksen vises hos alle, men bare ens egen knapp kan trykkes; de andre er deaktivert. Fokus går til ens egen knapp. Ved likt står det «Likt – kast igjen!», og begge må kaste på nytt. Etter duellen går fokus tilbake til «Kast terningen».
 - Under duellen stiller de to musene seg side om side på feltet og ser på hverandre. Den som har tur står til venstre, og motstanderen står til høyre, speilvendt. De rører ikke hverandre: det er ca. 10 i luft mellom nesene (`DUELL_AVSTAND` = 30).
 - Høyest går 2 felt frem, lavest 2 felt tilbake (`DUELL_STEG`), med hopp, vinneren først. Kommer vinneren til osten, vinner den spillet – også om det ikke var vinnerens tur.
 - Havner vinneren eller taperen på et spesialfelt eller hos en annen mus etterpå, skjer det ingenting (ingen ny duell).
@@ -133,7 +142,8 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Vinnermusen tar backflips ved osten, og konfetti faller over brettet i ca. 10 sekunder. Har man slått av animasjoner i operativsystemet, vises bare seiersteksten.
 - Etter seieren byttes «Kast terningen» ut med «Se pallen 🏆», så man selv velger når man går videre.
 - Pallen: plassering etter hvor langt musene kom. Står to likt, kommer den som kastet først foran. Navn over 12 tegn forkortes på pallen. Er det 4 spillere, står musen på 4. plass ved siden av pallen og gråter (blå tårer).
-- «Spill igjen» bruker samme spillere, pynt og brett, men spesialfeltene får nye plasser. «Tilbake til lobby» går til startskjermen med navnene og pynten fortsatt utfylt.
+- Bare verten har «Spill igjen» og «Tilbake til lobby» på pallen. De andre ser «Venter på at verten velger «Spill igjen» eller «Tilbake til lobby» …». Verten kan trykke når den vil, og da skjer det hos alle (også de som ikke har åpnet pallen ennå).
+- «Spill igjen» bruker samme spillere, pynt og brett, men spesialfeltene får nye plasser. «Tilbake til lobby» tar alle i rommet tilbake til lobbyen (samme kode), der verten kan velge et annet brett og nye spillere kan bli med. Spillere som har gått, fjernes da.
 
 ### Sidepanelet
 
@@ -141,12 +151,13 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - Spillerlisten står øverst i panelet. Hver spiller er en avrundet «pille» med musikonet i en sirkel i en lys utgave av musens farge, med kant i musens farge (den hvite musen får i tillegg en tynn brun kant). På telefon er pillene litt mindre og står i rader under brettet.
 - Den som har tur: oransje pille, litt større, fet tekst og «🎲 Din tur»-merkelapp. Når turen bytter, spretter den nye spilleren litt inn – men ikke når samme spiller kaster på nytt (sekser eller 🎲).
 - Spillere som står over en runde får et 💤-merke og blir litt gjennomsiktige, fra de lander på kattefeltet til de har stått over.
-- Statusteksten er stor og tydelig, med en prikk i fargen til musen som har tur.
+- Statusteksten er stor og tydelig, med en prikk i fargen til musen som har tur. Har man selv tur, står det «Din tur, <navn>!», ellers «<navn> sin tur». Ved seier står det «Du kom først til osten og vant, <navn>!» hos vinneren.
+- Ens egen mus har «(deg)» etter navnet i spillerlisten. «Kast terningen» kan bare trykkes av den som har tur, og er deaktivert (`aria-disabled`) hos de andre og mens hendelsene spilles av.
 - Snakkeboblen har farge etter hva som skjedde (grønn ⏩, rød ⏪, gul 🎲, blå katt), fet og litt mørkere tekst, og en liten spiss som peker opp mot statusteksten. Den popper inn. Skjer to ting samtidig (f.eks. katten og en sekser), bestemmer det første fargen.
 - Snakkeboblen har en fast plass (112 px høy), så terningen, «Kast terningen» og emoji-knappene står stille med og uten boble. Når den er tom, er plassen tom.
 - Terningen er i «tegneserie»-stil: tykk kant, hard skygge rett under og runde hjørner. Den vipper mens den ruller.
 - «Kast terningen» og «Se pallen» er tykke 3D-knapper med mørkere kant i bunnen. De løfter seg ved hover og trykkes ned ved klikk. Deaktivert er de grå, flate og står litt lavere.
-- Emoji-reaksjoner: 👍 😂 😮 😢 🧀 🎉 som runde knapper under terningen. De blir større ved hover og spretter når man trykker, og emojien flyter opp over brettet. Nå som alle sitter ved samme maskin, vises de bare på skjermen.
+- Emoji-reaksjoner: 👍 😂 😮 😢 🧀 🎉 som runde knapper under terningen. De blir større ved hover og spretter når man trykker, og emojien flyter opp over brettet. Reaksjonen sendes via serveren og flyter opp hos alle i rommet (issue #56).
 - Hover-effektene gjelder bare på enheter med mus, så de ikke «henger igjen» på telefon. Med prefers-reduced-motion er sprett og vipp av.
 
 ### Logo, ikon og utseende
@@ -160,11 +171,12 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 ### Lyd og musikk
 
 - Lydeffekter lages i nettleseren (Web Audio), uten lydfiler: terningen høres ut som en ekte terning som ruller (klakk som blir glissere, og et dunk når den stopper), musen sier «boing» når den hopper, egne lyder for spesialfeltene (katten hveser), og en fanfare ved seier. Knappen «🔊 Lyd på/av» øverst skrur dem av og på.
-- Musikken (`assets/audio/tema.mp3`) starter når man trykker «Start spillet», og går i loop. Musikk-knappen (🎵) skrur den av og på. Har man skrudd den av med knappen, starter den ikke av seg selv igjen. En volumskyver ved siden av knappen styrer hvor høyt musikken spiller (0,4 fra start). Knappen og skyveren vises bare når sangfilen finnes.
+- Musikken (`public/assets/audio/tema.mp3`) starter når spillet starter (hos alle), og går i loop. Musikk-knappen (🎵) skrur den av og på. Har man skrudd den av med knappen, starter den ikke av seg selv igjen. En volumskyver ved siden av knappen styrer hvor høyt musikken spiller (0,4 fra start). Knappen og skyveren vises bare når sangfilen finnes.
 
 ### Testing og verktøy
 
-- Playwright åpner ikke filer direkte (`file:`), så testene bruker testserveren i `.claude/test/server.js`. Den stopper av seg selv etter 5 minutter uten besøk.
+- Testene bruker den ekte serveren (`server.js`) på `http://localhost:3000`, startet med `TESTMODUS=1`. Den gamle testserveren `.claude/test/server.js` er fjernet i issue #56. Flere spillere testes i hver sin fane.
+- Testmodus: bare med `TESTMODUS=1` tar serveren imot `socket.emit('test', { posisjoner, spesial, kast, tur })`, som flytter musene, bytter spesialfelt og bestemmer de neste terningkastene. Uten `TESTMODUS` finnes ikke dette, så ingen kan jukse på nettet. Variablene i nettleseren er bare en kopi, så å endre dem endrer ikke spillet.
 - Playwright kjører alltid synlig, så jeg kan se testene (før var den usynlig, fra issue #17). Den bruker Microsoft Edge, som følger med Windows (issue #45). Testeren sjekker `favicon.svg` med `fetch`, fordi fane-ikonet ikke alltid står i nettverkslisten. Knappens plass måles med `offsetTop`, fordi `getBoundingClientRect()` tar med løft- og trykk-animasjonen.
 - Ingen lyd når `tester` og `tilgjengelighet` tester: rett etter hver gang siden åpnes, setter de `musikk.muted = true` og gir spillet en lydkontekst uten utgang (`lydKontekst = new AudioContext({ sinkId: { type: 'none' } })`, issue #49). Lyd- og musikk-knappene virker som vanlig og lydkoden kjører, men ingenting høres. Spillet selv er ikke endret.
 - Skjermbildene fra testene heter `skjermbilder/<issue-nummer>-<navn>.png`.
@@ -217,6 +229,40 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 
 - **Venter på svar fra meg** (eldre funn fra `tilgjengelighet` i issue #51, ikke fra duellen, kan bli egne issues): «Din tur»-pillen blir for bred på telefon med veldig brede navn (siden scroller sidelengs). Vinneren har fortsatt «Din tur» / «(har tur)» etter seier. Tekstene inni brett-SVG-en bør ha `aria-hidden`. Startskjermen mangler h2-overskrifter. Lite (12 px) skrift i `.hendelse.minst`.
 
+### Flerspiller over nettet (issue #56, påbegynt 25.11.2026)
+
+Hver spiller på sin egen enhet, telefon og PC sammen. Først skulle jeg gjøre stegene selv, men jeg ombestemte meg: Claude gjør steg 1–6, og forklarer etterpå så jeg kan lære av det. Arbeidet gjøres på branchen `flerspiller`, så nettsiden på `main` virker som før til alt er ferdig. Ingen PR til `test` eller `main` før jeg ber om det.
+
+Bestemt 25.11.2026:
+
+- Reglene ligger bare på serveren, i `spillregler.js` i rotmappen (ikke i `public/`). Ved hvert kast sender serveren en liste med hendelser (kast, hopp, spesialfelt, duell, seier) og den nye tilstanden. `game.js` beholder tegning, animasjon og lyd, og spiller av hendelsene.
+- Bare over nett: én spiller per enhet. Man kan ikke lenger spille flere på samme maskin.
+- Emoji-reaksjoner vises hos alle i rommet.
+- Verten (den som opprettet rommet) velger brett og trykker «Start spillet» og «Spill igjen». De andre ser at de venter på verten.
+
+Teknisk løsning:
+
+- En Node-server (`server.js` i rotmappen) med Express og Socket.IO. Express viser spillfilene, og Socket.IO holder en åpen linje til hver spiller.
+- Spillfilene flyttes til `public/`: `index.html`, `style.css`, `game.js`, `favicon.svg` og `assets/`. Serveren viser bare det som ligger der.
+- Serveren bestemmer: nettleseren sender bare ønsker («kast»), serveren sjekker turen, kaster terningen, oppdaterer spilltilstanden og sender den til alle. Nettleseren tegner det serveren sier.
+- Rom: én spiller oppretter et spill og får en kode, og de andre blir med ved å skrive inn koden.
+- `node_modules/` holdes utenfor git (`.gitignore`). `package.json` og `package-lock.json` skal være med i git.
+
+Steg:
+
+1. ✅ Rydd: flytt spillfilene til `public/`, og legg `node_modules/` i `.gitignore`.
+2. ✅ Minimal server: `server.js` viser `public/`, og et kast i én fane vises i alle faner.
+3. ✅ Flytt spillreglene fra `game.js` til serveren (tur, terning, spesialfelt, duell, seier).
+4. ✅ Rom med kode, og startskjerm med «Opprett spill» og «Bli med».
+5. Test lokalt: to faner ✅ (Claude testet med Playwright: opprett/bli med, feil kode, brettvalg, kast, duell på tvers av faner, emoji, seier, pallen, «Spill igjen», en spiller som går – ingen konsollfeil, og 1000 simulerte spill gjennom `spillregler.js`). Telefon på samme Wi-Fi: gjenstår, det må jeg gjøre selv.
+6. ✅ Ny `Dockerfile` med Node i stedet for nginx (`node:22-alpine`, port 3000). Sjekket med `docker build` og `docker run`: spillet og Socket.IO gir 200, og `server.js`, `spillregler.js`, `package.json` og `CLAUDE.md` gir 404.
+7. Ut på nettet: skyhosting som bygger fra `Dockerfile` (ikke valgt ennå). Venter.
+8. GitHub Pages: når `index.html` ikke lenger ligger i roten av `main`, slutter Pages-siden (`dice-mice.d.prodio.no`) å virke. Hva som skal skje med den (videresending eller slå av), bestemmes før merge til `main`. Venter.
+
+Ikke bestemt ennå: hvor serveren skal ligge på nettet, og om man skal kunne komme tilbake til samme spill etter å ha lastet siden på nytt.
+
+«Kjøre spillet», «Filer», «Testing og verktøy», «Spillere og start», tester- og tilgjengelighet-agentene, github-flyt-skillen og README er oppdatert. Regel 4 var allerede oppdatert.
+
 ## Senere (ikke lag før jeg ber om det)
 
-- Spille over nettet: hver spiller på sin egen enhet, telefon og PC sammen. Hvordan dette skal løses teknisk, er ikke bestemt ennå.
+- Ingenting akkurat nå.

@@ -1,14 +1,9 @@
-// Dice-Mice!
+// Dice-Mice! – det som skjer i nettleseren: tegning, animasjon, lyd og knapper.
+// Spillreglene ligger på serveren (spillregler.js). Nettleseren sender bare ønsker («kast»)
+// og spiller av hendelsene serveren sender tilbake (se spillAv).
 
 // ---------- Innstillinger ----------
-// Brettene man kan velge mellom på startskjermen
-const BRETT = {
-  kort:   { antallSteg: 30, omganger: 2 },
-  vanlig: { antallSteg: 40, omganger: 2.5 },
-  lang:   { antallSteg: 55, omganger: 3 },
-};
-
-// Spiller 1 får første farge, spiller 2 den andre osv. Navnet brukes hvis spilleren ikke skriver inn noe.
+// Musen får fargen sin av serveren (mus = 0–3). Navnet brukes hvis spilleren ikke skriver inn noe.
 // prikk: fargen på prikkene på musens terning i en duell (lys på mørk mus, mørk på lys mus)
 const MUSER = [
   { navn: 'Grå mus',   farge: '#9a9a9a', prikk: '#222' },
@@ -26,7 +21,7 @@ const PYNT = [
   { id: 'briller', navn: 'Briller' },
 ];
 
-// Spesialfelt: gjør noe når en mus lander på dem
+// Spesialfelt: utseende og tekst. Hva de gjør, bestemmer serveren (spillregler.js).
 const SPESIALFELT = {
   frem:    { ikon: '⏩', farge: '#bfe3b4', tekst: (n) => `${n} fant ostesmuler og hopper 3 felt frem!` },
   tilbake: { ikon: '⏪', farge: '#f4b6b6', tekst: (n) => `${n} gikk i en musefelle og må 3 felt tilbake!` },
@@ -34,10 +29,6 @@ const SPESIALFELT = {
   // Kattefeltet har ikke ikon på feltet: en sovende katt ligger ved siden av (se tegnKatt)
   over:    { ikon: '😾', farge: '#c9d7f0', tekst: (n) => `${n} vekket katten! Den ble sur, og ${n} står over neste runde.` },
 };
-const SPESIAL_STEG = 3;            // hvor langt frem/tilbake spesialfeltene flytter musen
-const DUELL_STEG = 2;              // hvor langt vinneren av en duell går frem, og taperen tilbake
-const ANDEL_SPESIALFELT = 1 / 6;   // omtrent hvert sjette felt er et spesialfelt
-
 const REAKSJONER = ['👍', '😂', '😮', '😢', '🧀', '🎉'];
 
 const SENTER = 350;
@@ -56,17 +47,22 @@ const ANTALL_KONFETTI = 80;
 const KONFETTI_FARGER = ['#e8a317', '#7cc576', '#e89aa6', '#ffd54a', '#6fa8dc', '#d9534f'];
 
 // ---------- Tilstand ----------
+// En kopi av det serveren vet, som oppdateres mens hendelsene spilles av.
 // Posisjon 0 = START, antallSteg = osten i midten
-let spillere = [];      // fylles fra startskjermen: { navn, farge, pynt }
+let spillere = [];      // fra serveren: { navn, farge, prikk, pynt, tilkoblet }
 let posisjoner = [];
 let staOver = [];       // sant for en spiller som må stå over neste runde
-let ankomst = [];       // når hver mus sist kom til feltet sitt (høyere = senere), så duellen velger den som kom sist
-let ankomstTeller = 0;
 let tur = 0;
 let ferdig = false;
-let opptatt = false;    // sant mens terningen ruller eller musen hopper
-let antallValgt = 2;    // forhåndsvalgt på startskjermen
+let opptatt = false;    // sant fra man trykker «Kast terningen» til serveren har svart
 let brettValgt = 'vanlig';
+
+// Rommet
+let meg = -1;           // mitt eget spillernummer i rommet
+let erVert = false;     // sant for den som opprettet rommet (velger brett og starter)
+let spillId = '';       // romkode + spillnummer, så nettleseren ser når et nytt spill starter
+let hendelseKo = Promise.resolve(); // det serveren sender, spilles av én ting om gangen
+let iKoen = 0;          // hvor mange ting som venter på å bli spilt av
 
 let antallSteg = 40;
 let steg = [];          // punktene på spiralen
@@ -81,10 +77,20 @@ let lydPaa = true;
 let musikkPaa = false;
 
 const startskjerm = document.getElementById('startskjerm');
-const antallValg = document.getElementById('antallValg');
+const opprettSkjema = document.getElementById('opprettSkjema');
+const bliMedSkjema = document.getElementById('bliMedSkjema');
+const mittIkon = document.getElementById('mittIkon');
+const mittNavn = document.getElementById('mittNavn');
+const minPynt = document.getElementById('minPynt');
+const kodeFelt = document.getElementById('kodeFelt');
+const feilmelding = document.getElementById('feilmelding');
+const lobby = document.getElementById('lobby');
+const romkode = document.getElementById('romkode');
+const lobbyliste = document.getElementById('lobbyliste');
 const brettValg = document.getElementById('brettValg');
-const navneskjema = document.getElementById('navneskjema');
-const navnefelt = document.getElementById('navnefelt');
+const startKnapp = document.getElementById('startKnapp');
+const lobbyVenter = document.getElementById('lobbyVenter');
+const resultatVenter = document.getElementById('resultatVenter');
 const spillet = document.getElementById('spillet');
 const brettramme = document.getElementById('brettramme');
 const brett = document.getElementById('brett');
@@ -153,23 +159,6 @@ function lagSpiralPunkter(antall, omganger) {
     punkter.push({ x: proever[j].x, y: proever[j].y });
   }
   return punkter;
-}
-
-// Legger spesialfeltene på tilfeldige plasser (nye plasser hver runde)
-function plasserSpesialfelt() {
-  spesial = {};
-  const kandidater = [];
-  for (let i = 2; i < antallSteg - 1; i++) kandidater.push(i); // ikke på START, første felt eller rett før osten
-  // Stokker kandidatene (Fisher–Yates)
-  for (let i = kandidater.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [kandidater[i], kandidater[j]] = [kandidater[j], kandidater[i]];
-  }
-  const typer = Object.keys(SPESIALFELT);
-  const antall = Math.round(antallSteg * ANDEL_SPESIALFELT);
-  kandidater.slice(0, antall).forEach((felt, k) => {
-    spesial[felt] = typer[k % typer.length];
-  });
 }
 
 // ---------- Lyd ----------
@@ -295,7 +284,7 @@ const lyd = {
     tone(f, i * 0.15, i === 3 ? 0.6 : 0.18, { type: 'triangle', volum: 0.25 })),
 };
 
-// Musikk: sangen ligger i assets/audio/tema.mp3 (stien er regnet fra rotmappen, der index.html ligger).
+// Musikk: sangen ligger i public/assets/audio/tema.mp3 (stien er regnet fra public/, der index.html ligger).
 // Musikk-knappen og volumet vises bare når filen finnes.
 const musikk = new Audio();
 musikk.loop = true;
@@ -568,7 +557,6 @@ async function flyttMus(i, antallHopp, retning = 1) {
     await hopp(g, fra, til);
     fra = til;
   }
-  ankomst[i] = ++ankomstTeller;
   if (maalfelt) maalfelt.classList.remove('maalfelt');
   tegnMusene(); // plasserer musene pent igjen hvis flere står på samme felt
 }
@@ -689,17 +677,7 @@ let sistVisteTur = -1;  // brukes så den nye spilleren bare spretter inn når t
 function visSpillerliste() {
   spillerliste.innerHTML = '';
   spillere.forEach((spiller, i) => {
-    const rad = document.createElement('li');
-    rad.style.setProperty('--musefarge', spiller.farge);
-
-    const ikon = document.createElement('span');
-    ikon.className = 'spiller-ikon';
-    ikon.append(lagMuseikon(spiller.farge, spiller.pynt));
-
-    const navn = document.createElement('span');
-    navn.className = 'spiller-navn';
-    navn.textContent = spiller.navn;
-    rad.append(ikon, navn);
+    const rad = lagSpillerRad(spiller, i);
 
     if (staOver[i]) {
       rad.classList.add('staar-over');
@@ -725,6 +703,41 @@ function visSpillerliste() {
   sistVisteTur = tur;
 }
 
+// Én «pille» med musikonet og navnet (brukes i spillerlisten og i lobbyen)
+function lagSpillerRad(spiller, i) {
+  const rad = document.createElement('li');
+  rad.style.setProperty('--musefarge', spiller.farge);
+  rad.classList.toggle('borte', !spiller.tilkoblet);
+
+  const ikon = document.createElement('span');
+  ikon.className = 'spiller-ikon';
+  ikon.append(lagMuseikon(spiller.farge, spiller.pynt));
+
+  const navn = document.createElement('span');
+  navn.className = 'spiller-navn';
+  navn.textContent = spiller.navn;
+  rad.append(ikon, navn, ...merkelapperForRom(i));
+  return rad;
+}
+
+// Små merkelapper bak navnet: «(deg)» på min egen mus, og «(har gått)» hvis spilleren har lukket siden.
+// Spilleren som har gått, blir også litt gjennomsiktig (se .borte i style.css).
+function merkelapperForRom(i) {
+  const merker = [];
+  if (i === meg) merker.push(lagMerke(' (deg)', 'deg'));
+  if (spillere[i] && !spillere[i].tilkoblet) {
+    merker.push(lagMerke(' (har gått)', 'borte-tekst'));
+  }
+  return merker;
+}
+
+function lagMerke(tekst, klasse) {
+  const span = document.createElement('span');
+  span.className = klasse;
+  span.textContent = tekst;
+  return span;
+}
+
 // Tekst som bare skjermlesere får med seg (se .skjult-tekst i style.css)
 function lagSkjultTekst(tekst) {
   const span = document.createElement('span');
@@ -733,23 +746,22 @@ function lagSkjultTekst(tekst) {
   return span;
 }
 
+// Statusteksten sier hvem som har tur. Har jeg selv tur, står det «Din tur, <navn>!».
 function oppdaterStatus() {
-  statusTekst.textContent = `${spillere[tur].navn} sin tur`;
+  const navn = spillere[tur].navn;
+  statusTekst.textContent = tur === meg ? `Din tur, ${navn}!` : `${navn} sin tur`;
   statusTekst.style.setProperty('--turfarge', spillere[tur].farge); // fargen på prikken foran teksten
   visSpillerliste();
+  oppdaterKastKnapp();
 }
 
-// ---------- Spillogikk ----------
-// Går videre til neste spiller. Spillere som må stå over, hoppes over.
-// Gir tilbake navnene på dem som sto over.
-function nesteTur() {
-  const stoOver = [];
-  for (;;) {
-    tur = (tur + 1) % spillere.length;
-    if (!staOver[tur]) return stoOver;
-    staOver[tur] = false;
-    stoOver.push(spillere[tur].navn);
-  }
+// «Kast terningen» kan bare trykkes av den som har tur, og bare når alt er spilt av.
+// aria-disabled i stedet for disabled: knappen ser deaktivert ut og trykk avvises,
+// men den beholder fokus, så tastaturbrukere kan trykke Enter igjen når det blir deres tur.
+function oppdaterKastKnapp() {
+  const kanKaste = !ferdig && !opptatt && tur === meg && iKoen === 0 && duellBoks.hidden;
+  if (kanKaste) kastKnapp.removeAttribute('aria-disabled');
+  else kastKnapp.setAttribute('aria-disabled', 'true');
 }
 
 // Legger en ny linje til teksten om hva som skjedde.
@@ -778,17 +790,8 @@ function tomHendelse() {
 }
 
 // ---------- Museduell ----------
-// Finner musen som mus i skal duellere mot: en annen mus på det samme vanlige feltet
-// (ikke START, spesialfelt eller osten). Står flere der, er det den som kom sist. -1 = ingen duell.
-function finnMotstander(i) {
-  const felt = posisjoner[i];
-  if (felt <= 0 || felt >= antallSteg || spesial[felt]) return -1;
-  let motstander = -1;
-  posisjoner.forEach((p, j) => {
-    if (j !== i && p === felt && (motstander < 0 || ankomst[j] > ankomst[motstander])) motstander = j;
-  });
-  return motstander;
-}
+// Serveren bestemmer når det blir duell og hva terningene viser. Her vises det.
+// Hver spiller kaster med sin egen «Kast»-knapp på sin egen enhet. Knappen til den andre er deaktivert.
 
 // Musene i duellen stiller seg side om side på feltet og snur seg mot hverandre:
 // den som har tur (a) står til venstre og ser mot høyre, motstanderen (b) står til høyre og speilvendes.
@@ -796,6 +799,9 @@ function finnMotstander(i) {
 // Så langt fra midten av feltet hver mus står. Nesen er ca. 25 fra midten av musen,
 // så 30 gir ca. 10 i luft mellom nesene: de ser på hverandre uten å røre hverandre.
 const DUELL_AVSTAND = 30;
+
+let duellSider = [];          // spillernumrene i duellen: [den som har tur, motstanderen]
+let duellKastene = [null, null]; // tallene i runden som pågår
 
 function stillOppTilDuell(a, b) {
   const plass = plasser[posisjoner[a]];
@@ -806,48 +812,31 @@ function stillOppTilDuell(a, b) {
   museGrupper[b].parentNode.appendChild(museGrupper[b]);
 }
 
-// Én runde i duellen: hver spiller trykker på sin egen «Kast»-knapp, i hvilken som helst rekkefølge.
-// Fokus starter på knappen til den som har tur (side 0) og flyttes til den andres når den første har kastet.
-// Gir tilbake de to tallene når begge har kastet.
-function duellRunde(sider) {
-  return new Promise((ferdigRunde) => {
-    const kast = [null, null];
-    duellKnapper.forEach((knapp, k) => {
-      knapp.removeAttribute('aria-disabled');
-      visTerning(null, duellTerninger[k]); // tom terning, så de gamle tallene ikke står igjen etter likt
-      knapp.onclick = async () => {
-        if (knapp.getAttribute('aria-disabled') === 'true') return; // allerede kastet (eller ruller)
-        knapp.setAttribute('aria-disabled', 'true');
-        const verdi = 1 + Math.floor(Math.random() * 6);
-        await trillTerninger([duellTerninger[k]]);
-        visTerning(verdi, duellTerninger[k]);
-        kast[k] = verdi;
-        const annen = 1 - k;
-        if (kast[annen] === null) {
-          // Bare det første kastet leses opp alene; det andre kommer i oppsummeringen etter runden
-          terningTekst.textContent = `${spillere[sider[k]].navn} slo ${verdi} i duellen.`;
-          if (duellKnapper[annen].getAttribute('aria-disabled') !== 'true') duellKnapper[annen].focus({ preventScroll: true });
-        } else {
-          ferdigRunde(kast);
-        }
-      };
-    });
-    duellKnapper[0].focus({ preventScroll: true });
+// Ny runde i duellen: tomme terninger, og bare min egen «Kast»-knapp kan trykkes
+function nyDuellRunde() {
+  duellKastene = [null, null];
+  duellKnapper.forEach((knapp, k) => {
+    visTerning(null, duellTerninger[k]); // tom terning, så de gamle tallene ikke står igjen etter likt
+    if (duellSider[k] === meg) knapp.removeAttribute('aria-disabled');
+    else knapp.setAttribute('aria-disabled', 'true');
   });
+  const min = duellSider.indexOf(meg);
+  if (min >= 0) duellKnapper[min].focus({ preventScroll: true });
 }
 
-// To mus kaster hver sin terning. Høyest går DUELL_STEG frem, lavest like mange tilbake. Likt = kast på nytt.
-// Havner de på et spesialfelt eller hos en annen mus etterpå, skjer det ingenting.
-async function duell(a, b) {
-  const sider = [a, b];
+// Duellen starter: boksen vises, og musene ser sint på hverandre
+async function startDuell(a, b) {
+  duellSider = [a, b];
   const navnA = spillere[a].navn;
   const navnB = spillere[b].navn;
-  sider.forEach((nr, k) => {
+  duellSider.forEach((nr, k) => {
     duellNavn[k].textContent = spillere[nr].navn;
     duellKnapper[k].setAttribute('aria-label', `Kast for ${spillere[nr].navn}`);
+    duellKnapper[k].setAttribute('aria-disabled', 'true');
     duellTerninger[k].dataset.navn = `${spillere[nr].navn} sin terning`;
     duellTerninger[k].style.setProperty('--terningfarge', spillere[nr].farge);
-    duellTerninger[k].style.setProperty('--prikkfarge', MUSER[nr].prikk);
+    duellTerninger[k].style.setProperty('--prikkfarge', spillere[nr].prikk);
+    visTerning(null, duellTerninger[k]);
     museGrupper[nr].classList.add('sint'); // sinte øyenbryn og risting (se style.css)
   });
   stillOppTilDuell(a, b);
@@ -857,122 +846,168 @@ async function duell(a, b) {
   duellBoks.classList.toggle('oppe', !iOvreHalvdel);
   duellMelding.textContent = '';
   duellBoks.hidden = false;
+  oppdaterKastKnapp();
   lyd.duell();
   // Skjermleseren får vite at det er duell og mot hvem. Litt pause før fokus flyttes til
   // kast-knappen, så meldingen ikke blir avbrutt.
   terningTekst.textContent = `⚔️ Duell! ${navnA} mot ${navnB}. Hver spiller trykker på sin egen Kast-knapp.`;
   await vent(600);
+  nyDuellRunde();
+}
 
-  let kastA;
-  let kastB;
-  for (;;) {
-    [kastA, kastB] = await duellRunde(sider);
-    const oppsummering = `Duell: ${navnA} slo ${kastA}, ${navnB} slo ${kastB}.`;
-    if (kastA !== kastB) {
-      terningTekst.textContent = oppsummering;
-      break;
-    }
-    terningTekst.textContent = `${oppsummering} Likt – kast igjen!`;
-    duellMelding.textContent = 'Likt – kast igjen!';
-    await vent(900);
-    duellMelding.textContent = '';
+// En av de to har kastet (side 0 = den som har tur, side 1 = motstanderen)
+async function visDuellKast(side, verdi) {
+  duellKnapper[side].setAttribute('aria-disabled', 'true');
+  await trillTerninger([duellTerninger[side]]);
+  visTerning(verdi, duellTerninger[side]);
+  duellKastene[side] = verdi;
+  if (duellKastene[1 - side] === null) {
+    // Bare det første kastet leses opp alene; det andre kommer i oppsummeringen etter runden
+    terningTekst.textContent = `${spillere[duellSider[side]].navn} slo ${verdi} i duellen.`;
   }
+}
 
-  const [vinner, taper] = kastA > kastB ? [a, b] : [b, a];
-  const frem = Math.min(DUELL_STEG, antallSteg - posisjoner[vinner]);
-  const tilbake = Math.min(DUELL_STEG, posisjoner[taper]);
+function duellOppsummering() {
+  const [a, b] = duellSider;
+  return `Duell: ${spillere[a].navn} slo ${duellKastene[0]}, ${spillere[b].navn} slo ${duellKastene[1]}.`;
+}
+
+// Likt: begge må kaste på nytt
+async function duellLikt() {
+  terningTekst.textContent = `${duellOppsummering()} Likt – kast igjen!`;
+  duellMelding.textContent = 'Likt – kast igjen!';
+  await vent(900);
+  duellMelding.textContent = '';
+  nyDuellRunde();
+}
+
+// Duellen er avgjort. Musene flytter seg etterpå (det er egne flytt-hendelser).
+async function avsluttDuell({ vinner, taper, frem, tilbake }) {
   // Skjermleseren får også vite hvordan musene flytter seg (det ser man ellers bare på brettet)
-  terningTekst.textContent += ` ${spillere[vinner].navn} vant og går ${frem} felt frem.`
+  terningTekst.textContent = `${duellOppsummering()} ${spillere[vinner].navn} vant og går ${frem} felt frem.`
     + (tilbake ? ` ${spillere[taper].navn} går ${tilbake} felt tilbake.` : '');
   duellMelding.textContent = `${spillere[vinner].navn} vant!`;
   lyd.duellSeier();
   await vent(1000);
   // Fokus tilbake til «Kast terningen» før boksen skjules, så det ikke forsvinner med knappene
-  kastKnapp.focus({ preventScroll: true });
+  if (duellBoks.contains(document.activeElement)) kastKnapp.focus({ preventScroll: true });
   duellBoks.hidden = true;
   tegnMusene(); // musene snur seg tilbake og blir glade/rolige igjen
   leggTilHendelse(`⚔️ ${spillere[vinner].navn} vant duellen mot ${spillere[taper].navn}!`, 'duell');
-
-  await flyttMus(vinner, frem);
-  await flyttMus(taper, tilbake, -1);
-  // Vinneren hopper av glede (flyttMus tegner musene på nytt, så klassen settes etterpå)
-  if (posisjoner[vinner] < antallSteg) museGrupper[vinner].classList.add('glad');
 }
 
-async function kastTerning() {
-  if (ferdig || opptatt) return;
-  opptatt = true;
-  // aria-disabled i stedet for disabled: knappen ser deaktivert ut og trykk avvises (opptatt),
-  // men den beholder fokus, så tastaturbrukere kan trykke Enter igjen etter kastet.
-  kastKnapp.setAttribute('aria-disabled', 'true');
-  tomHendelse();
-  terningTekst.textContent = '';
+// ---------- Hendelser fra serveren ----------
+// Serveren sender en liste med hendelser etter hvert kast. De spilles av én og én, i rekkefølge.
+// iKo sørger for at det neste fra serveren venter til det forrige er ferdig spilt av.
+function iKo(oppgave) {
+  iKoen++;
+  hendelseKo = hendelseKo
+    .then(oppgave)
+    .catch((feil) => console.error(feil))
+    .finally(() => {
+      iKoen--;
+      oppdaterKastKnapp();
+    });
+}
 
-  const kast = 1 + Math.floor(Math.random() * 6);
-  await trillTerning();
-  visTerning(kast);
-  terningTekst.textContent = `${spillere[tur].navn} slo ${kast}.`; // leses opp av skjermleseren
-  await flyttMus(tur, Math.min(kast, antallSteg - posisjoner[tur]));
-
-  // Spesialfelt (det nye feltet musen havner på etterpå, gjør ingenting)
-  const navn = spillere[tur].navn;
-  const type = spesial[posisjoner[tur]];
-  let kastIgjen = false;
-  if (type) {
-    leggTilHendelse(`${SPESIALFELT[type].ikon} ${SPESIALFELT[type].tekst(navn)}`, type);
-    lyd[type]();
-    if (type === 'frem') {
-      await flyttMus(tur, Math.min(SPESIAL_STEG, antallSteg - posisjoner[tur]));
-    } else if (type === 'tilbake') {
-      await flyttMus(tur, Math.min(SPESIAL_STEG, posisjoner[tur]), -1);
-    } else if (type === 'igjen') {
-      kastIgjen = true;
-    } else if (type === 'over') {
-      vekkKatt(posisjoner[tur]);
-      staOver[tur] = true;
+async function spillAv(h) {
+  const navn = (i) => spillere[i].navn;
+  if (h.type === 'kast') {
+    tomHendelse();
+    terningTekst.textContent = '';
+    await trillTerning();
+    visTerning(h.verdi);
+    terningTekst.textContent = `${navn(h.spiller)} slo ${h.verdi}.`; // leses opp av skjermleseren
+  } else if (h.type === 'flytt') {
+    await flyttMus(h.spiller, h.antall, h.retning);
+  } else if (h.type === 'spesial') {
+    const felt = SPESIALFELT[h.felttype];
+    leggTilHendelse(`${felt.ikon} ${felt.tekst(navn(h.spiller))}`, h.felttype);
+    lyd[h.felttype]();
+    if (h.felttype === 'over') {
+      vekkKatt(h.felt);
+      staOver[h.spiller] = true;
     }
-  }
-
-  // Museduell: ender musen på et vanlig felt der en annen mus står (også etter ⏩ eller ⏪)
-  const motstander = finnMotstander(tur);
-  if (motstander >= 0) await duell(tur, motstander);
-
-  // Den som er ved osten, har vunnet – i en duell kan det være en annen enn den som har tur
-  const vinnerNr = posisjoner.findIndex((p) => p >= antallSteg);
-
-  // Slår man 6, får man kaste igjen (hver gang)
-  if (kast === 6 && !kastIgjen && vinnerNr < 0) {
-    kastIgjen = true;
-    leggTilHendelse(`🎲 ${navn} slo 6 og kaster igjen!`, 'igjen');
+  } else if (h.type === 'duellStart') {
+    await startDuell(h.a, h.b);
+  } else if (h.type === 'duellKast') {
+    await visDuellKast(h.side, h.verdi);
+  } else if (h.type === 'duellLikt') {
+    await duellLikt();
+  } else if (h.type === 'duellFerdig') {
+    await avsluttDuell(h);
+  } else if (h.type === 'duellGlad') {
+    // Vinneren hopper av glede (flyttMus tegner musene på nytt, så klassen settes etterpå)
+    museGrupper[h.spiller].classList.add('glad');
+  } else if (h.type === 'sekser') {
+    leggTilHendelse(`🎲 ${navn(h.spiller)} slo 6 og kaster igjen!`, 'igjen');
     lyd.igjen();
+  } else if (h.type === 'nesteTur') {
+    h.stoOver.forEach((i) => {
+      staOver[i] = false;
+      leggTilHendelse(`😾 ${navn(i)} står over denne runden.`, 'over');
+    });
+    tur = h.tur;
+    oppdaterStatus();
+  } else if (h.type === 'seier') {
+    visSeier(h.spiller);
   }
-  opptatt = false;
-
-  if (vinnerNr >= 0) {
-    ferdig = true;
-    // Vinneren kan være motstanderen i en duell. tur settes til vinneren, så spillerlisten,
-    // prikken foran statusteksten og pallen (visPallen) viser riktig mus.
-    tur = vinnerNr;
-    statusTekst.textContent = `${spillere[vinnerNr].navn} kom først til osten og vant!`;
-    statusTekst.style.setProperty('--turfarge', spillere[vinnerNr].farge);
-    visSpillerliste();
-    kastKnapp.hidden = true;
-    kastKnapp.removeAttribute('aria-disabled');
-    pallKnapp.hidden = false;
-    pallKnapp.focus(); // fokus flyttes til «Se pallen 🏆», så det ikke forsvinner med «Kast terningen»
-    feirSeier(vinnerNr);
-    return;
-  }
-
-  if (!kastIgjen) {
-    nesteTur().forEach((n) => leggTilHendelse(`😾 ${n} står over denne runden.`, 'over'));
-  }
-  oppdaterStatus();
-  kastKnapp.removeAttribute('aria-disabled');
 }
 
-// En emoji flyter opp over brettet
-function sendReaksjon(emoji) {
+// Etter hendelsene: bruker tilstanden fra serveren, i tilfelle noe ikke stemmer
+function brukSpill(spill) {
+  const flyttet = spill.posisjoner.some((p, i) => p !== posisjoner[i]);
+  posisjoner = [...spill.posisjoner];
+  staOver = [...spill.staOver];
+  tur = spill.tur;
+  ferdig = spill.ferdig;
+  if (flyttet) tegnMusene();
+  if (!ferdig) oppdaterStatus();
+}
+
+// Den som er ved osten, har vunnet – i en duell kan det være en annen enn den som har tur
+function visSeier(vinnerNr) {
+  ferdig = true;
+  // tur settes til vinneren, så spillerlisten, prikken foran statusteksten og pallen (visPallen) viser riktig mus
+  tur = vinnerNr;
+  statusTekst.textContent = vinnerNr === meg
+    ? `Du kom først til osten og vant, ${spillere[vinnerNr].navn}!`
+    : `${spillere[vinnerNr].navn} kom først til osten og vant!`;
+  statusTekst.style.setProperty('--turfarge', spillere[vinnerNr].farge);
+  visSpillerliste();
+  kastKnapp.hidden = true;
+  kastKnapp.removeAttribute('aria-disabled');
+  pallKnapp.hidden = false;
+  pallKnapp.focus(); // fokus flyttes til «Se pallen 🏆», så det ikke forsvinner med «Kast terningen»
+  feirSeier(vinnerNr);
+}
+
+// Jeg trykker «Kast terningen»: ber serveren om å kaste. Serveren svarer nei hvis det ikke er min tur.
+function kastTerning() {
+  if (kastKnapp.getAttribute('aria-disabled') === 'true') return;
+  opptatt = true;
+  oppdaterKastKnapp();
+  socket.emit('kast', (godtatt) => {
+    if (!godtatt) {
+      opptatt = false;
+      oppdaterKastKnapp();
+    }
+  });
+}
+
+// Jeg trykker på min egen «Kast»-knapp i duellen
+duellKnapper.forEach((knapp) => {
+  knapp.addEventListener('click', () => {
+    if (knapp.getAttribute('aria-disabled') === 'true') return; // ikke min knapp, eller allerede kastet
+    knapp.setAttribute('aria-disabled', 'true');
+    socket.emit('duellKast', (godtatt) => {
+      if (!godtatt) knapp.removeAttribute('aria-disabled');
+    });
+  });
+});
+
+// En emoji flyter opp over brettet (hos alle i rommet)
+function visReaksjon(emoji) {
   const el = document.createElement('span');
   el.className = 'reaksjon';
   el.textContent = emoji;
@@ -1051,90 +1086,108 @@ function visPallen() {
   pall.setAttribute('aria-label', `Resultat: ${rekkefolge.map((i, r) => `${r + 1}. ${spillere[i].navn}`).join(', ')}`);
 }
 
-// ---------- Startskjerm ----------
-// Lager ett navnefelt per spiller, med musen spilleren får og valg av pynt ved siden av
-function visNavnefelt() {
-  const skrevet = [...navnefelt.querySelectorAll('input')].map((f) => f.value);
-  const valgtPynt = [...navnefelt.querySelectorAll('select')].map((f) => f.value);
-  navnefelt.innerHTML = '';
+// ---------- Startskjerm og lobby ----------
+// Pyntvalget på startskjermen, med musen ved siden av. Fargen får man først når man er i et rom,
+// så her vises den grå musen.
+function lagPyntvalg() {
+  PYNT.forEach((p) => {
+    const valg = document.createElement('option');
+    valg.value = p.id;
+    valg.textContent = p.navn;
+    minPynt.appendChild(valg);
+  });
+  visMittIkon();
+  minPynt.addEventListener('change', visMittIkon);
+}
 
-  for (let i = 0; i < antallValgt; i++) {
-    const rad = document.createElement('div');
-    rad.className = 'navnerad';
+function visMittIkon() {
+  mittIkon.replaceChildren(lagMuseikon(MUSER[0].farge, minPynt.value));
+}
 
-    const pyntValg = document.createElement('select');
-    pyntValg.setAttribute('aria-label', `Pynt på musen til spiller ${i + 1}`);
-    PYNT.forEach((p) => {
-      const valg = document.createElement('option');
-      valg.value = p.id;
-      valg.textContent = p.navn;
-      pyntValg.appendChild(valg);
-    });
-    pyntValg.value = valgtPynt[i] || 'ingen';
+function visFeil(tekst) {
+  feilmelding.textContent = tekst;
+}
 
-    let ikon = lagMuseikon(MUSER[i].farge, pyntValg.value);
-    pyntValg.addEventListener('change', () => {
-      const nyttIkon = lagMuseikon(MUSER[i].farge, pyntValg.value);
-      ikon.replaceWith(nyttIkon);
-      ikon = nyttIkon;
-    });
+// Det serveren trenger for å lage spilleren min
+function minSpiller() {
+  return { navn: mittNavn.value, pynt: minPynt.value };
+}
 
-    const felt = document.createElement('input');
-    felt.type = 'text';
-    felt.maxLength = 20;
-    felt.placeholder = MUSER[i].navn;
-    felt.value = skrevet[i] || '';
-    felt.setAttribute('aria-label', `Navn på spiller ${i + 1}`);
+// «Opprett spill»: serveren lager et rom med kode, og jeg blir verten
+function opprettSpill(hendelse) {
+  hendelse.preventDefault();
+  visFeil('');
+  socket.emit('opprett', minSpiller(), (svar) => {
+    if (!svar.ok) visFeil(svar.feil);
+  });
+}
 
-    rad.append(ikon, felt, pyntValg);
-    navnefelt.appendChild(rad);
+// «Bli med»: blir med i et rom med koden de andre har fått
+function bliMed(hendelse) {
+  hendelse.preventDefault();
+  const kode = kodeFelt.value.trim().toUpperCase();
+  if (!kode) {
+    visFeil('Skriv inn koden du har fått.');
+    kodeFelt.focus();
+    return;
   }
-  oppdaterValgknapper();
+  visFeil('');
+  socket.emit('bliMed', { ...minSpiller(), kode }, (svar) => {
+    if (!svar.ok) {
+      visFeil(svar.feil);
+      kodeFelt.focus();
+    }
+  });
 }
 
 function oppdaterValgknapper() {
-  // Den valgte knappen får både farge og aria-pressed, så skjermleseren sier hvilken som er valgt
-  antallValg.querySelectorAll('button').forEach((knapp) => {
-    const valgt = Number(knapp.dataset.antall) === antallValgt;
-    knapp.classList.toggle('valgt', valgt);
-    knapp.setAttribute('aria-pressed', String(valgt));
-  });
+  // Den valgte knappen får både farge og aria-pressed, så skjermleseren sier hvilken som er valgt.
+  // Bare verten kan velge brett; de andre ser hva verten har valgt.
   brettValg.querySelectorAll('button').forEach((knapp) => {
     const valgt = knapp.dataset.brett === brettValgt;
     knapp.classList.toggle('valgt', valgt);
     knapp.setAttribute('aria-pressed', String(valgt));
+    knapp.disabled = !erVert;
   });
 }
 
-function startSpillet(hendelse) {
-  hendelse.preventDefault();
-  spillere = [...navnefelt.querySelectorAll('.navnerad')].map((rad, i) => ({
-    navn: rad.querySelector('input').value.trim() || MUSER[i].navn,
-    farge: MUSER[i].farge,
-    pynt: rad.querySelector('select').value,
+// Viser lobbyen i rommet: koden, hvem som er med, og brettet verten har valgt
+function visLobby(rom) {
+  const varSkjult = lobby.hidden;
+  feiringNr++; // stopper backflips og konfetti hvis man kommer fra pallen
+  startskjerm.hidden = true;
+  spillet.hidden = true;
+  resultat.hidden = true;
+  lobby.hidden = false;
+  spillId = '';
+
+  romkode.textContent = rom.kode;
+  lobbyliste.replaceChildren(...spillere.map((spiller, i) => {
+    const rad = lagSpillerRad(spiller, i);
+    if (i === rom.vert) rad.append(lagMerke('👑 Vert', 'vert-merke'));
+    return rad;
   }));
-  // Musikken starter når spillet starter, hvis ingen har skrudd den av med knappen
-  if (!musikkValgt && !musikkPaa) spillMusikk();
-  startNyttSpill();
+  brettValgt = rom.brett;
+  oppdaterValgknapper();
+  startKnapp.hidden = !erVert;
+  lobbyVenter.hidden = erVert;
+  // Fokus flyttes bare når lobbyen vises, ikke hver gang noen blir med
+  if (varSkjult) (erVert ? startKnapp : romkode).focus();
 }
 
-// Starter en ny runde med spillerne som er valgt (brukes også av «Spill igjen»)
-function startNyttSpill() {
+// Starter et nytt spill med tilstanden fra serveren (også ved «Spill igjen»)
+function startNyttSpill(spill) {
   feiringNr++;
-  const valgtBrett = BRETT[brettValgt];
-  antallSteg = valgtBrett.antallSteg;
-  steg = lagSpiralPunkter(antallSteg, valgtBrett.omganger);
+  antallSteg = spill.antallSteg;
+  steg = lagSpiralPunkter(antallSteg, spill.omganger);
   plasser = [...steg, { x: SENTER, y: SENTER }]; // siste plass = osten
-  plasserSpesialfelt();
+  spesial = spill.spesial;
 
-  posisjoner = spillere.map(() => 0);
-  staOver = spillere.map(() => false);
-  ankomst = spillere.map(() => 0);
-  ankomstTeller = 0;
-  tur = 0;
-  ferdig = false;
+  posisjoner = [...spill.posisjoner];
+  staOver = [...spill.staOver];
+  tur = spill.tur;
+  ferdig = spill.ferdig;
   opptatt = false;
-  kastKnapp.removeAttribute('aria-disabled');
   kastKnapp.hidden = false;
   pallKnapp.hidden = true;
   tomHendelse();
@@ -1143,39 +1196,77 @@ function startNyttSpill() {
   sistVisteTur = -1; // den første spilleren spretter inn når spillet starter
 
   startskjerm.hidden = true;
+  lobby.hidden = true;
   resultat.hidden = true;
   spillet.hidden = false;
   tegnBrett();
   tegnMusene();
   visTerning(null);
   oppdaterStatus();
-  // Fokus til «Kast terningen», så det ikke forsvinner når startskjermen eller pallen skjules.
+  // Musikken starter når spillet starter, hvis ingen har skrudd den av med knappen
+  if (!musikkValgt && !musikkPaa) spillMusikk();
+  // Fokus til «Kast terningen», så det ikke forsvinner når lobbyen eller pallen skjules.
   // preventScroll: siden skal ikke hoppe ned til knappen på telefon.
   kastKnapp.focus({ preventScroll: true });
 }
 
-function tilbakeTilLobby() {
-  feiringNr++;
-  resultat.hidden = true;
-  spillet.hidden = true;
-  startskjerm.hidden = false;
-  // Fokus til det valgte antallet spillere, øverst på startskjermen
-  antallValg.querySelector('button.valgt').focus();
+// Serveren sender rommet hver gang noe endrer seg (noen blir med eller går, nytt spill, tilbake til lobby)
+function visRom(rom) {
+  meg = rom.meg;
+  erVert = rom.vert === meg;
+  spillere = rom.spillere.map((s) => ({
+    navn: s.navn,
+    farge: MUSER[s.mus].farge,
+    prikk: MUSER[s.mus].prikk,
+    pynt: s.pynt,
+    tilkoblet: s.tilkoblet,
+  }));
+  // Etter spillet er det bare verten som velger «Spill igjen» eller «Tilbake til lobby»
+  spillIgjenKnapp.hidden = !erVert;
+  lobbyKnapp.hidden = !erVert;
+  resultatVenter.hidden = erVert;
+
+  if (rom.fase === 'lobby') {
+    visLobby(rom);
+    return;
+  }
+  const nyId = `${rom.kode}-${rom.spillNr}`;
+  if (nyId !== spillId) {
+    spillId = nyId;
+    startNyttSpill(rom.spill);
+  } else {
+    visSpillerliste(); // f.eks. en spiller har gått
+  }
 }
 
-antallValg.addEventListener('click', (hendelse) => {
-  const knapp = hendelse.target.closest('button');
-  if (!knapp) return;
-  antallValgt = Number(knapp.dataset.antall);
-  visNavnefelt();
-});
+// Mister nettleseren linjen til serveren, er man ute av rommet og må begynne på nytt
+function forbindelsenBrutt() {
+  if (meg < 0) return; // ikke i noe rom ennå: socket.io kobler til igjen av seg selv
+  feiringNr++;
+  meg = -1;
+  erVert = false;
+  spillId = '';
+  lobby.hidden = true;
+  spillet.hidden = true;
+  resultat.hidden = true;
+  startskjerm.hidden = false;
+  visFeil('Forbindelsen til serveren ble brutt. Opprett eller bli med i et spill på nytt.');
+}
 
-brettValg.addEventListener('click', (hendelse) => {
-  const knapp = hendelse.target.closest('button');
-  if (!knapp) return;
-  brettValgt = knapp.dataset.brett;
-  oppdaterValgknapper();
+// ---------- Forbindelsen til serveren ----------
+// io() kommer fra /socket.io/socket.io.js og kobler til serveren siden ble lastet fra
+const socket = io();
+
+socket.on('rom', (rom) => iKo(() => visRom(rom)));
+socket.on('hendelser', ({ hendelser, spill }) => {
+  opptatt = false; // serveren har svart på kastet
+  iKo(async () => {
+    for (const h of hendelser) await spillAv(h);
+    brukSpill(spill);
+  });
 });
+socket.on('reaksjon', ({ emoji }) => visReaksjon(emoji));
+socket.on('disconnect', forbindelsenBrutt);
 
 // ---------- Start ----------
 REAKSJONER.forEach((emoji) => {
@@ -1185,7 +1276,7 @@ REAKSJONER.forEach((emoji) => {
   knapp.textContent = emoji;
   knapp.setAttribute('aria-label', `Send ${emoji}`);
   knapp.addEventListener('click', () => {
-    sendReaksjon(emoji);
+    socket.emit('reaksjon', emoji); // serveren sender den til alle i rommet, også meg
     // Knappen spretter (se .emoji-knapp.sprett i style.css). Klassen tas av og på igjen,
     // så den spretter på nytt selv om man trykker flere ganger fort.
     knapp.classList.remove('sprett');
@@ -1216,10 +1307,18 @@ volumSlider.addEventListener('input', () => {
   musikk.volume = Number(volumSlider.value);
 });
 
-visNavnefelt();
+brettValg.addEventListener('click', (hendelse) => {
+  const knapp = hendelse.target.closest('button');
+  if (!knapp || !erVert) return;
+  socket.emit('velgBrett', knapp.dataset.brett);
+});
+
+lagPyntvalg();
 oppdaterLydKnapper();
-navneskjema.addEventListener('submit', startSpillet);
+opprettSkjema.addEventListener('submit', opprettSpill);
+bliMedSkjema.addEventListener('submit', bliMed);
+startKnapp.addEventListener('click', () => socket.emit('start'));
 kastKnapp.addEventListener('click', kastTerning);
 pallKnapp.addEventListener('click', visPallen);
-spillIgjenKnapp.addEventListener('click', startNyttSpill);
-lobbyKnapp.addEventListener('click', tilbakeTilLobby);
+spillIgjenKnapp.addEventListener('click', () => socket.emit('spillIgjen'));
+lobbyKnapp.addEventListener('click', () => socket.emit('tilLobby'));
