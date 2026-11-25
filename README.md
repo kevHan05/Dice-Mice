@@ -37,6 +37,17 @@ Spillet er bare vanlig HTML, CSS og JavaScript, så du trenger ikke installere n
    ```
 2. Åpne `index.html` i nettleseren.
 
+### Med Docker
+
+Har du Docker, kan spillet kjøres i en container med en liten nginx-webserver:
+
+```bash
+docker build -t dice-mice .
+docker run --rm -p 8080:80 dice-mice
+```
+
+Åpne så http://localhost:8080. Stopp containeren med Ctrl+C.
+
 ## Om prosjektet
 
 Dice-Mice! er laget for å lære GitHub – issues, brancher, pull requests og merging – sammen med [Claude Code](https://claude.com/claude-code). Hver endring starter som et issue, lages på en egen branch, testes automatisk i en ekte nettleser med Playwright og samles i `test` før den går til `main`.
