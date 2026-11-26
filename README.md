@@ -4,13 +4,15 @@
 
 **Dice-Mice!** er et brettspill i nettleseren der musene kaster terning og løper i en spiral inn mot osten i midten – den som kommer først til osten, vinner.
 
-### ▶ [Spill her: kevhan05.github.io/Dice-Mice](https://kevhan05.github.io/Dice-Mice/)
+### ▶ [Spill her: dice-mice.onrender.com](https://dice-mice.onrender.com/)
+
+Spillet ligger på Render sitt gratisnivå. Har ingen spilt på en stund, sover serveren, og første besøk kan ta opptil et minutt.
 
 ![Spillet på PC: spiralbrettet med osten i midten, to mus, spesialfelt og en sovende katt, og sidepanelet med spillerne og terningen](skjermbilder/19-pc.png)
 
 ## Slik spiller du
 
-1. Velg antall spillere (1–4) og brett (kort, vanlig eller lang), skriv inn navn og velg pynt på musen din.
+1. Skriv inn navnet ditt og velg pynt på musen din. Én trykker **Opprett spill** og får en kode på fire bokstaver. De andre (opptil 4 i alt) skriver koden og trykker **Bli med**. Den som opprettet spillet, velger brett (kort, vanlig eller lang) og trykker **Start spillet**.
 2. Trykk **Kast terningen** når det er din tur. Musen hopper like mange felt som terningen viser.
 3. Slår du **6**, får du kaste igjen.
 4. Noen felt gjør noe når du lander på dem:
@@ -23,30 +25,36 @@
    | Kattefeltet (blått, med en sovende katt ved siden av) | Katten våkner og blir sur 😾 – du står over neste runde |
 
 5. Den som først kommer til osten i midten, vinner. Du trenger ikke treffe osten nøyaktig.
-6. Etter spillet står musene på en **pall** etter hvor langt de kom. Er dere fire, står den siste ved siden av og gråter. Velg **Spill igjen** eller **Tilbake til lobby**.
+6. Etter spillet står musene på en **pall** etter hvor langt de kom. Er dere fire, står den siste ved siden av og gråter. Den som opprettet spillet, velger **Spill igjen** eller **Tilbake til lobby**.
 
-Alle spiller på samme maskin, og spillet fungerer på både PC og telefon.
+Hver spiller bruker sin egen telefon eller PC, og spillet fungerer på begge.
 
 ## Kjøre spillet lokalt
 
-Spillet er bare vanlig HTML, CSS og JavaScript, så du trenger ikke installere noe:
+Spillet i nettleseren er vanlig HTML, CSS og JavaScript (i `public/`). En liten Node-server (`server.js`, med Express og Socket.IO) viser spillet og holder styr på spillene. Du trenger [Node.js](https://nodejs.org/):
 
 1. Last ned eller klon repoet:
    ```bash
    git clone https://github.com/kevHan05/Dice-Mice.git
+   cd Dice-Mice
    ```
-2. Åpne `index.html` i nettleseren.
+2. Installer pakkene og start serveren:
+   ```bash
+   npm install
+   npm start
+   ```
+3. Åpne http://localhost:3000. Serveren skriver også ut adressen telefoner på samme Wi-Fi kan bruke.
 
 ### Med Docker
 
-Har du Docker, kan spillet kjøres i en container med en liten nginx-webserver:
+Har du Docker, kan serveren kjøres i en container:
 
 ```bash
 docker build -t dice-mice .
-docker run --rm -p 8080:80 dice-mice
+docker run --rm -p 3000:3000 dice-mice
 ```
 
-Åpne så http://localhost:8080. Stopp containeren med Ctrl+C.
+Åpne så http://localhost:3000. Stopp containeren med Ctrl+C.
 
 ## Om prosjektet
 

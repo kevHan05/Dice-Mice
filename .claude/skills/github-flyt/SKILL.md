@@ -55,13 +55,13 @@ Feiler `git merge --ff-only origin/main`, betyr det at `test` har endringer som 
 ## 3. Endringen
 
 1. Skriv planen inn i CLAUDE.md **før** du lager noe (regel 7), under «Pågår og planlagt».
-2. Lag endringen. Prosjektets filer ligger i rotmappen (`index.html`, `style.css`, `game.js`), og lyd i `assets/audio/`.
+2. Lag endringen. Spillfilene ligger i `public/` (`index.html`, `style.css`, `game.js`, lyd i `assets/audio/`). Serveren og spillreglene ligger i rotmappen (`server.js`, `spillregler.js`).
 3. Hookene i `.claude/settings.json` retter filformatet og sjekker JavaScript for syntaksfeil automatisk hver gang du endrer en fil.
 4. Flytt oppgaven til «Ferdig» i CLAUDE.md når den er laget.
 
 ## 4. Testing
 
-**Kjør tester-subagenten bare når spillet kan være påvirket** – det vil si når oppgaven endrer `index.html`, `style.css`, `game.js`, `favicon.svg` eller filer i `assets/`, eller selve testoppsettet (`.claude/agents/tester.md`, `.claude/test/server.js`, `.mcp.json`). Ellers er det ikke vits.
+**Kjør tester-subagenten bare når spillet kan være påvirket** – det vil si når oppgaven endrer filer i `public/`, `server.js` eller `spillregler.js`, eller selve testoppsettet (`.claude/agents/tester.md`, `.mcp.json`). Ellers er det ikke vits.
 
 Kjør da subagenten **`tester`** (Agent-verktøyet, `subagent_type: "tester"`). Den tester spillet i en ekte nettleser med Playwright og tar skjermbilder til `skjermbilder/`. Gi den:
 - issue-nummeret (brukes i navnet på skjermbildene),

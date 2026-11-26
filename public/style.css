@@ -782,6 +782,90 @@ aside {
   max-width: 130px;
 }
 
+/* «Bli med»: kodefeltet og knappen ved siden av hverandre */
+.bli-med-skjema {
+  margin-top: 8px;
+}
+
+.bli-med {
+  display: flex;
+  gap: 8px;
+}
+
+.kodefelt {
+  width: 8ch;
+  min-height: 44px; /* stor nok å treffe på telefon */
+  padding: 10px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  text-align: center;
+  text-transform: uppercase;
+  border: 2px solid #8a7650;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.feilmelding {
+  margin: 0;
+  min-height: 1.4em;
+  color: #a12b26; /* mørk rød: god kontrast mot den beige bakgrunnen */
+  font-weight: bold;
+  text-align: center;
+}
+
+/* ---------- Lobbyen ---------- */
+.romkode {
+  margin: 0;
+  padding: 6px 20px;
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  background: #ffd54a;
+  border: 3px solid #b07a10;
+  border-radius: 12px;
+  color: #3d2b08;
+}
+
+.lobby-hjelp,
+.venter {
+  margin: 0;
+  text-align: center;
+  color: #5a4a2a;
+}
+
+/* order: 0, så telefonoppsettet for sidepanelet (.spillerliste { order: 1 }) ikke flytter listen nederst */
+.startskjerm .lobbyliste {
+  max-width: 320px;
+  order: 0;
+}
+
+/* «👑 Vert»-merket i lobbyen */
+.vert-merke {
+  margin-left: auto;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #7a5208;
+  white-space: nowrap;
+}
+
+/* Bare verten kan velge brett: for de andre er knappene deaktivert, men det valgte brettet synes fortsatt */
+.antall-valg button:disabled {
+  cursor: default;
+}
+
+/* «(deg)» bak mitt eget navn, og spillere som har lukket siden */
+.deg,
+.borte-tekst {
+  font-size: 0.8rem;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.spillerliste li.borte {
+  opacity: 0.45;
+}
+
 /* ---------- Uten animasjoner ---------- */
 /* Har man slått av animasjoner i operativsystemet, står ting stille */
 @media (prefers-reduced-motion: reduce) {

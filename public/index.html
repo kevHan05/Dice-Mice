@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dice-Mice!</title>
+  <!-- Fane-ikon: osten fra midten av brettet -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <header class="topp">
+    <!-- Logo: DICE er ost med ostehull, MICE er musegrå med museører på M og hale på E.
+         Bredden på hvert ord er låst (textLength), så ørene og halen havner riktig uansett skrift. -->
+    <h1 class="logo">
+      <svg viewBox="0 0 600 112" role="img" aria-labelledby="logoTittel">
+        <title id="logoTittel">Dice-Mice!</title>
+        <defs>
+          <!-- Ostegult mønster med ostehull, brukt som fyll i DICE -->
+          <pattern id="ostehull" patternUnits="userSpaceOnUse" width="70" height="56">
+            <rect width="70" height="56" fill="#ffd54a"/>
+            <ellipse cx="14" cy="14" rx="7" ry="6" fill="#e3a21a"/>
+            <ellipse cx="47" cy="10" rx="4" ry="3.5" fill="#e3a21a"/>
+            <ellipse cx="36" cy="36" rx="8" ry="6.5" fill="#e3a21a"/>
+            <ellipse cx="62" cy="45" rx="4.5" ry="4" fill="#e3a21a"/>
+            <ellipse cx="9" cy="46" rx="3.5" ry="3" fill="#e3a21a"/>
+          </pattern>
+          <!-- Musegrå, litt lysere øverst -->
+          <linearGradient id="musegraa" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#b8b8b8"/>
+            <stop offset="1" stop-color="#8a8a8a"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Museørene på M (tegnes før teksten, så M ligger foran dem) -->
+        <g stroke="#333" stroke-width="4">
+          <circle cx="329" cy="29" r="15" fill="url(#musegraa)"/>
+          <circle cx="391" cy="29" r="15" fill="url(#musegraa)"/>
+        </g>
+        <circle cx="329" cy="26" r="7.5" fill="#e89aa6"/>
+        <circle cx="391" cy="26" r="7.5" fill="#e89aa6"/>
+
+        <!-- Musehalen på E (tegnes før teksten, så den kommer ut bak E) -->
+        <path d="M 552 84 C 584 92 596 62 580 52 C 568 45 560 58 570 63" fill="none" stroke="#333" stroke-width="9" stroke-linecap="round"/>
+        <path d="M 552 84 C 584 92 596 62 580 52 C 568 45 560 58 570 63" fill="none" stroke="#e89aa6" stroke-width="4.5" stroke-linecap="round"/>
+
+        <g aria-hidden="true" font-family="'Arial Black', 'Segoe UI Black', Impact, system-ui, sans-serif" font-weight="900" font-size="84" stroke-linejoin="round" paint-order="stroke">
+          <text x="12" y="96" textLength="250" lengthAdjust="spacingAndGlyphs" fill="url(#ostehull)" stroke="#b07a10" stroke-width="7">DICE</text>
+          <text x="270" y="96" textLength="34" lengthAdjust="spacingAndGlyphs" fill="#8a7650" stroke="#5a4a2a" stroke-width="4">-</text>
+          <text x="316" y="96" textLength="250" lengthAdjust="spacingAndGlyphs" fill="url(#musegraa)" stroke="#333" stroke-width="7">MICE</text>
+        </g>
+      </svg>
+    </h1>
+    <div class="lydknapper">
+      <button type="button" id="lydKnapp" class="liten-knapp" aria-pressed="true">🔊 Lyd på</button>
+      <!-- Musikk-knappen og volumet vises bare når assets/audio/tema.mp3 finnes -->
+      <button type="button" id="musikkKnapp" class="liten-knapp" aria-pressed="false" hidden>🎵 Musikk av</button>
+      <span id="volumValg" class="volum-valg" hidden>
+        <label for="volum">Volum</label>
+        <input type="range" id="volum" min="0" max="1" step="0.05" value="0.4">
+      </span>
+    </div>
+  </header>
+
+  <!-- Startskjermen: skriv navn og velg pynt, og opprett et spill eller bli med i et med koden -->
+  <section id="startskjerm" class="startskjerm">
+    <form id="opprettSkjema">
+      <p class="etikett">Navn og pynt</p>
+      <div class="navnerad">
+        <span id="mittIkon"></span>
+        <input type="text" id="mittNavn" maxlength="20" placeholder="Navnet ditt" aria-label="Navnet ditt">
+        <select id="minPynt" aria-label="Pynt på musen din"></select>
+      </div>
+      <button type="submit">Opprett spill</button>
+    </form>
+    <form id="bliMedSkjema" class="bli-med-skjema">
+      <label class="etikett" for="kodeFelt">Eller bli med i et spill</label>
+      <div class="bli-med">
+        <input type="text" id="kodeFelt" class="kodefelt" maxlength="4" placeholder="KODE"
+               autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button type="submit">Bli med</button>
+      </div>
+    </form>
+    <!-- role="alert": skjermleseren leser opp feilen med en gang («Fant ikke noe spill …») -->
+    <p id="feilmelding" class="feilmelding" role="alert"></p>
+  </section>
+
+  <!-- Lobbyen: romkoden, hvem som er med, og brettvalg. Bare verten kan velge brett og starte. -->
+  <section id="lobby" class="startskjerm" hidden>
+    <h2 class="etikett">Romkode</h2>
+    <p id="romkode" class="romkode" tabindex="-1"></p>
+    <p class="lobby-hjelp">Gi koden til de andre, så kan de bli med fra sin egen telefon eller PC.</p>
+
+    <p class="etikett" id="lobbyEtikett">Spillere</p>
+    <ul id="lobbyliste" class="spillerliste lobbyliste" aria-labelledby="lobbyEtikett"></ul>
+
+    <!-- Valgknappene er en gruppe med navn, og den valgte har aria-pressed (settes i oppdaterValgknapper) -->
+    <p class="etikett" id="brettEtikett">Brett</p>
+    <div id="brettValg" class="antall-valg brett-valg" role="group" aria-labelledby="brettEtikett">
+      <button type="button" data-brett="kort">Kort</button>
+      <button type="button" data-brett="vanlig">Vanlig</button>
+      <button type="button" data-brett="lang">Lang</button>
+    </div>
+
+    <button type="button" id="startKnapp">Start spillet</button>
+    <p id="lobbyVenter" class="venter" hidden>Venter på at verten starter spillet …</p>
+  </section>
+
+  <main id="spillet" hidden>
+    <div id="brettramme" class="brettramme">
+      <!-- role="img": skjermleseren leser beskrivelsen av brettet (hvor musene står), ikke bitene inni -->
+      <svg id="brett" viewBox="0 -30 700 730" role="img" aria-label="Spillbrettet"></svg>
+      <!-- Duellboksen vises midt på brettet når to mus duellerer (se duell() i game.js) -->
+      <div id="duell" class="duell" hidden>
+        <div class="duell-boks" role="group" aria-label="Duell">
+          <p class="duell-tittel">⚔️ Duell!</p>
+          <div class="duell-terninger">
+            <div class="duell-side">
+              <div class="terning duell-terning" role="img"></div>
+              <span class="duell-navn"></span>
+              <button type="button" class="duell-kast">Kast</button>
+            </div>
+            <div class="duell-side">
+              <div class="terning duell-terning" role="img"></div>
+              <span class="duell-navn"></span>
+              <button type="button" class="duell-kast">Kast</button>
+            </div>
+          </div>
+          <p class="duell-melding"></p>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <ul id="spillerliste" class="spillerliste" aria-label="Spillere"></ul>
+      <!-- aria-live: skjermleseren leser opp hvem som har tur og hvem som vant -->
+      <p id="status" aria-live="polite"></p>
+      <!-- Fast plass til snakkeboblen, så knappene under ikke flytter seg -->
+      <div class="hendelse-plass">
+        <p id="hendelse" class="hendelse" aria-live="polite"></p>
+      </div>
+      <div id="terning" class="terning" role="img" aria-label="Terningen"></div>
+      <!-- Usynlig tekst som leses opp når terningen har stoppet («Grå mus slo 4») -->
+      <p id="terningTekst" class="skjult-tekst" aria-live="polite"></p>
+      <button id="kast">Kast terningen</button>
+      <button id="tilPallen" type="button" hidden>Se pallen 🏆</button>
+      <div id="reaksjoner" class="reaksjoner" role="group" aria-label="Send en reaksjon"></div>
+    </aside>
+  </main>
+
+  <section id="resultat" class="resultat" hidden>
+    <!-- tabindex="-1": overskriften får fokus når pallen vises, så skjermleseren sier «Resultat» -->
+    <h2 id="resultatTittel" tabindex="-1">Resultat</h2>
+    <svg id="pall" viewBox="0 -20 460 290" role="img" aria-label="Resultat"></svg>
+    <div class="resultatknapper">
+      <button id="spillIgjen" type="button">Spill igjen</button>
+      <button id="tilLobby" type="button" class="andre-knapp">Tilbake til lobby</button>
+    </div>
+    <p id="resultatVenter" class="venter" hidden>Venter på at verten velger «Spill igjen» eller «Tilbake til lobby» …</p>
+  </section>
+  <!-- Socket.IO-klienten kommer fra serveren (server.js), og holder linjen åpen til den -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
