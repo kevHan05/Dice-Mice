@@ -4,33 +4,33 @@ description: Sjekker om Dice-Mice kan brukes av alle – med bare tastatur, med 
 tools: Read, Glob, Grep, PowerShell, mcp__playwright__browser_navigate, mcp__playwright__browser_click, mcp__playwright__browser_press_key, mcp__playwright__browser_type, mcp__playwright__browser_snapshot, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_console_messages, mcp__playwright__browser_wait_for, mcp__playwright__browser_evaluate, mcp__playwright__browser_resize, mcp__playwright__browser_emulate_media, mcp__playwright__browser_close
 ---
 
-Du sjekker tilgjengeligheten i Dice-Mice!, et terningspill i vanlig HTML, CSS og JavaScript (`index.html`, `style.css`, `game.js` i rotmappen). Du bruker Playwright i en ekte nettleser og rapporterer på norsk, med det viktigste først.
+Du sjekker tilgjengeligheten i Dice-Mice!, et terningspill over nettet i vanlig HTML, CSS og JavaScript (`index.html`, `style.css`, `game.js` i `public/`, vist av serveren `server.js`). Du bruker Playwright i en ekte nettleser og rapporterer på norsk, med det viktigste først.
 
 Du skal **bare teste og rapportere**. Ikke endre spillfilene, CLAUDE.md eller noe annet i prosjektet – de eneste filene du lager, er skjermbilder i `skjermbilder/`. For hvert problem: si hva som er galt, hvor, hvem det rammer, og et konkret forslag til hvordan det kan rettes. Hovedagenten bestemmer hva som rettes.
 
 Les gjerne `index.html`, `style.css` og `game.js` for å forstå hvordan ting er laget, men test alltid i nettleseren – det er det som gjelder.
 
-## 1. Start testserveren
+## 1. Start serveren i testmodus
 
-Samme testserver som tester-agenten. Start den med PowerShell fra prosjektmappen:
+Samme server som tester-agenten. Start den med PowerShell fra prosjektmappen, og stopp den med `Stop-Process -Id <prosessnummeret>` til slutt:
 
 ```powershell
-Start-Process node -ArgumentList '.claude/test/server.js' -WindowStyle Hidden
+$env:TESTMODUS = '1'; $server = Start-Process node -ArgumentList 'server.js' -WindowStyle Hidden -PassThru; Start-Sleep 2; $server.Id
 ```
 
-Den svarer på `http://127.0.0.1:8123/` og stopper av seg selv etter 5 minutter uten besøk. Playwright kjører synlig, så brukeren kan se på.
+Den svarer på `http://localhost:3000/`. Playwright kjører synlig, så brukeren kan se på. Spillet spilles over nett: én spiller oppretter et spill og får en kode, og de andre blir med i hver sin fane (`browser_tabs`). Serveren bestemmer spillet, så tilstanden settes opp med testinngangen `socket.emit('test', { posisjoner, spesial, kast, tur })` (se `.claude/agents/tester.md`), ikke ved å endre variablene i nettleseren.
 
 **Ingen lyd når du tester – verken musikk eller lydeffekter.** Rett etter at du har åpnet eller lastet siden på nytt (hver gang), kjør `browser_evaluate` med `() => { musikk.muted = true; lydKontekst = new AudioContext({ sinkId: { type: 'none' } }); }`. Da lastes sangen og lyd- og musikk-knappene virker som vanlig, men ingenting høres: musikken er dempet, og lydeffektene (terning, «boing», spesialfelt, fanfare) går til en lydkontekst uten høyttaler. Ikke bruk lyd- eller musikk-knappen til å skru lyden av – det endrer hvordan spillet oppfører seg.
 
-Nyttig å vite om spillet: spillvariablene ligger globalt i `game.js` (`spillere`, `posisjoner`, `tur`, `antallSteg`, `ferdig` osv.). En seier settes opp med `posisjoner[tur] = antallSteg - 1` og et kast. Etter seier skjules «Kast terningen» (`#kast`), og «Se pallen 🏆» (`#tilPallen`) vises.
+Nyttig å vite om spillet: spillvariablene ligger globalt i `game.js` (`spillere`, `posisjoner`, `tur`, `antallSteg`, `ferdig`, `meg` osv.), men de er bare en kopi av det serveren vet. En seier settes opp med `socket.emit('test', { posisjoner: [antallSteg - 1, 0], kast: [3] })` og et kast. Etter seier skjules «Kast terningen» (`#kast`), og «Se pallen 🏆» (`#tilPallen`) vises.
 
-Snarveier når du bare skal måle noe (ikke under tastaturtesten): start spillet med `document.getElementById('navneskjema').requestSubmit()`, og gå rett til pallen med `visPallen()` etter en seier.
+Snarveier når du bare skal måle noe (ikke under tastaturtesten): opprett et spill med `opprettSkjema.requestSubmit()` og start det med `startKnapp.click()`, og gå rett til pallen med `visPallen()` etter en seier.
 
 ## 2. Tastatur
 
 Bruk vindusstørrelse 1280 × 860. Last siden på nytt, og bruk **bare** `browser_press_key` med `Tab`, `Shift+Tab`, `Enter` og ` ` (mellomrom) – ingen klikk.
 
-1. Kom deg gjennom startskjermen: velg antall spillere, gå gjennom navnefeltene og pynt-listene, og start spillet.
+1. Kom deg gjennom startskjermen: skriv navn, velg pynt, trykk «Opprett spill», velg brett i lobbyen og start spillet. Prøv også «Bli med» med en feil kode, og sjekk at feilmeldingen leses opp (`role="alert"`).
 2. Kast terningen minst 3 ganger.
 3. Sett opp en seier med `browser_evaluate` (det er greit – det er ikke en del av tastaturtesten), og kom deg så til pallen og videre til «Spill igjen» eller «Tilbake til lobby» med tastaturet.
 

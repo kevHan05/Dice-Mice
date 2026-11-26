@@ -1,15 +1,25 @@
 # Dice-Mice! i en container
-# Spillet er bare vanlig HTML, CSS og JavaScript, så det trengs ingen bygging –
-# en liten nginx-webserver viser filene.
+# Flerspiller-serveren (server.js) kjører med Node, og viser spillfilene i public/.
 #
 # Bygg:  docker build -t dice-mice .
-# Kjør:  docker run --rm -p 8080:80 dice-mice
-# Åpne:  http://localhost:8080
+# Kjør:  docker run --rm -p 3000:3000 dice-mice
+# Åpne:  http://localhost:3000
 
-FROM nginx:1.27-alpine
+FROM node:22-alpine
 
-# Bare spillfilene kopieres inn (ikke .git, .claude, skjermbilder/ osv.)
-COPY index.html style.css game.js favicon.svg /usr/share/nginx/html/
-COPY assets/ /usr/share/nginx/html/assets/
+WORKDIR /app
 
-EXPOSE 80
+# Pakkene først: da kan Docker gjenbruke dette laget så lenge package.json og package-lock.json ikke endres
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# Bare serveren og spillfilene kopieres inn (ikke .git, .claude, skjermbilder/ osv.)
+COPY server.js spillregler.js ./
+COPY public/ ./public/
+
+ENV NODE_ENV=production
+EXPOSE 3000
+
+# Kjører som brukeren «node», ikke root
+USER node
+CMD ["node", "server.js"]

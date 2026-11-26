@@ -1,2 +1,5 @@
 # Playwright sine loggfiler og midlertidige filer fra testing (skjermbildene ligger i skjermbilder/)
 .playwright-mcp/
+
+# Pakkene til flerspiller-serveren (hentes med npm install)
+node_modules/
