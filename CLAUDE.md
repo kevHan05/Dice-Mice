@@ -16,7 +16,9 @@ Et terningspill over nettet som spilles med venner. Brettspill der mus kaster te
 
 Fra issue #56 trenger spillet serveren: `npm install` (første gang) og `npm start`, og åpne http://localhost:3000. Serveren skriver også ut adressen telefoner på samme Wi-Fi kan bruke (f.eks. `http://10.0.0.4:3000`). Krever Node.js. Å åpne `public/index.html` direkte virker ikke lenger.
 
-På nettet: https://kevhan05.github.io/Dice-Mice/ viser den gamle versjonen (samme maskin) fra `main` til `flerspiller` er merget. Hva som skjer med Pages-siden etterpå, er ikke bestemt ennå (steg 8 under «Flerspiller over nettet»).
+På nettet: https://dice-mice.onrender.com (Render, gratisnivået, valgt fordi dette er for læring). Render bygger fra `Dockerfile` og setter `PORT` selv (`server.js` bruker `process.env.PORT`). Serveren sovner etter ca. 15 minutter uten besøk, og første besøk etterpå tar under et minutt. Rommene ligger bare i minnet, så de forsvinner når serveren sovner eller startes på nytt. Jeg har laget kontoen og koblet GitHub selv.
+
+Den gamle Pages-adressen (https://kevhan05.github.io/Dice-Mice/, med eget domene `dice-mice.d.prodio.no` i `CNAME`) viser bare `index.html` i roten, som sender besøkende videre til Render.
 
 Med Docker (issue #52, byttet til Node i issue #56): `docker build -t dice-mice .` og `docker run --rm -p 3000:3000 dice-mice`, og åpne http://localhost:3000. Containeren er `node:22-alpine` med bare `package.json`, `package-lock.json`, `server.js`, `spillregler.js` og `public/`, og kjører som brukeren `node`. Legges det til nye filer som serveren trenger, må de også legges til i `Dockerfile`. (Adressen «På samme Wi-Fi» som serveren skriver ut i containeren, er containerens egen og virker ikke fra telefonen; bruk PC-ens adresse.)
 
@@ -44,11 +46,13 @@ Med Docker (issue #52, byttet til Node i issue #56): `docker build -t dice-mice 
 - `.gitignore` – holder `.playwright-mcp/` (Playwright sine loggfiler) og `node_modules/` utenfor git
 - `.gitattributes` – får git til å bruke LF-linjeskift i alle tekstfiler
 - `Dockerfile` – kjører serveren i en container med Node (se «Kjøre spillet»)
+- `index.html` (i roten) – videresending fra GitHub Pages til spillet på Render. Ikke en del av spillet.
+- `CNAME` – det egne domenet til GitHub Pages (`dice-mice.d.prodio.no`)
 
 ## Git og arbeidsflyt
 
 Git: `https://github.com/kevHan05/Dice-Mice.git`. Grener:
-- `main` – ferdig og publisert. GitHub Pages publiserer fra roten av `main` (Settings → Pages → Branch `main`, mappe `/ (root)`).
+- `main` – ferdig og publisert. Render bygger spillet fra `main`. GitHub Pages publiserer fra roten av `main` (Settings → Pages → Branch `main`, mappe `/ (root)`), der det bare ligger videresendingen til Render.
 - `test` – alle endringer samles her før `main`.
 
 Slik jobber vi (detaljene står i `.claude/skills/github-flyt/SKILL.md`):
@@ -224,44 +228,13 @@ Ting jeg ikke hadde beskrevet, men som prototypen måtte ha en verdi for.
 - **Dockerfile** (issue #52) – spillet kan kjøres i en container med nginx. Bare spillfilene er med. Sjekket med `docker build` og `docker run`: spillfilene og musikken gir 200, og `.git`, `CLAUDE.md` og `skjermbilder/` gir 404.
 - **Maler for issues og PR-er** (issue #26) – `oppgave.md`, `feil.md` og `pull_request_template.md` i `.github/`. github-flyt-skillen bruker de samme malene, og tester-subagenten kjøres bare når spillet kan være påvirket. Malene vises på GitHub når de ligger i `main`.
 - **Museduell** (issue #51) – lander en mus der en annen mus står, blir det duell. Hver spiller kaster sin egen terning: høyest går 2 felt frem, lavest 2 tilbake, og likt gir nytt kast. Musene ser sint på hverandre uten å røre hverandre, og vinneren hopper av glede. Detaljene står under «Museduell». Testet med `tester` (BESTÅTT, runde 4) og `tilgjengelighet` (funnene fra duellen er rettet). `skjermbilder/51-*.png`.
+- **Flerspiller over nettet** (issue #56) – hver spiller på sin egen enhet, telefon og PC sammen. En Node-server (`server.js`, Express og Socket.IO) viser `public/`, og reglene ligger bare på serveren (`spillregler.js`): nettleseren sender ønsker («kast»), og serveren sender hendelsene og tilstanden til alle i rommet. Rom med kode, vert, lobby og emoji hos alle (detaljene står under «Spillere og start»). Ny `Dockerfile` med Node, og spillet ligger på Render (https://dice-mice.onrender.com). GitHub Pages sender videre til Render. Testet med Playwright: to faner og en fane i telefonstørrelse som egen enhet (`skjermbilder/56-*.png`), 1000 simulerte spill gjennom `spillregler.js`, `docker build`/`docker run`, og jeg har spilt på Render.
 
 ## Pågår og planlagt
 
 - **Venter på svar fra meg** (eldre funn fra `tilgjengelighet` i issue #51, ikke fra duellen, kan bli egne issues): «Din tur»-pillen blir for bred på telefon med veldig brede navn (siden scroller sidelengs). Vinneren har fortsatt «Din tur» / «(har tur)» etter seier. Tekstene inni brett-SVG-en bør ha `aria-hidden`. Startskjermen mangler h2-overskrifter. Lite (12 px) skrift i `.hendelse.minst`.
 
-### Flerspiller over nettet (issue #56, påbegynt 25.11.2026)
-
-Hver spiller på sin egen enhet, telefon og PC sammen. Først skulle jeg gjøre stegene selv, men jeg ombestemte meg: Claude gjør steg 1–6, og forklarer etterpå så jeg kan lære av det. Arbeidet gjøres på branchen `flerspiller`, så nettsiden på `main` virker som før til alt er ferdig. Ingen PR til `test` eller `main` før jeg ber om det.
-
-Bestemt 25.11.2026:
-
-- Reglene ligger bare på serveren, i `spillregler.js` i rotmappen (ikke i `public/`). Ved hvert kast sender serveren en liste med hendelser (kast, hopp, spesialfelt, duell, seier) og den nye tilstanden. `game.js` beholder tegning, animasjon og lyd, og spiller av hendelsene.
-- Bare over nett: én spiller per enhet. Man kan ikke lenger spille flere på samme maskin.
-- Emoji-reaksjoner vises hos alle i rommet.
-- Verten (den som opprettet rommet) velger brett og trykker «Start spillet» og «Spill igjen». De andre ser at de venter på verten.
-
-Teknisk løsning:
-
-- En Node-server (`server.js` i rotmappen) med Express og Socket.IO. Express viser spillfilene, og Socket.IO holder en åpen linje til hver spiller.
-- Spillfilene flyttes til `public/`: `index.html`, `style.css`, `game.js`, `favicon.svg` og `assets/`. Serveren viser bare det som ligger der.
-- Serveren bestemmer: nettleseren sender bare ønsker («kast»), serveren sjekker turen, kaster terningen, oppdaterer spilltilstanden og sender den til alle. Nettleseren tegner det serveren sier.
-- Rom: én spiller oppretter et spill og får en kode, og de andre blir med ved å skrive inn koden.
-- `node_modules/` holdes utenfor git (`.gitignore`). `package.json` og `package-lock.json` skal være med i git.
-
-Steg:
-
-1. ✅ Rydd: flytt spillfilene til `public/`, og legg `node_modules/` i `.gitignore`.
-2. ✅ Minimal server: `server.js` viser `public/`, og et kast i én fane vises i alle faner.
-3. ✅ Flytt spillreglene fra `game.js` til serveren (tur, terning, spesialfelt, duell, seier).
-4. ✅ Rom med kode, og startskjerm med «Opprett spill» og «Bli med».
-5. Test lokalt: to faner ✅ (Claude testet med Playwright: opprett/bli med, feil kode, brettvalg, kast, duell på tvers av faner, emoji, seier, pallen, «Spill igjen», en spiller som går – ingen konsollfeil, og 1000 simulerte spill gjennom `spillregler.js`). Telefon på samme Wi-Fi: går ikke, fordi jeg jobber på en fjern-PC. I stedet testet Claude med Playwright, med en fane i telefonstørrelse i et eget nettleseroppsett (som en egen enhet). Ekte telefon testes når spillet er på Render.
-6. ✅ Ny `Dockerfile` med Node i stedet for nginx (`node:22-alpine`, port 3000). Sjekket med `docker build` og `docker run`: spillet og Socket.IO gir 200, og `server.js`, `spillregler.js`, `package.json` og `CLAUDE.md` gir 404.
-7. Ut på nettet: Render, gratisnivået (valgt 25.11.2026, fordi dette er for læring). Render bygger fra `Dockerfile` og setter `PORT` selv (`server.js` bruker `process.env.PORT`). Gratisnivået sovner etter ca. 15 minutter uten besøk, og første besøk etterpå tar under et minutt. Rommene ligger bare i minnet, så de forsvinner når serveren sovner eller startes på nytt. Jeg lager kontoen og kobler GitHub selv; Claude forklarer stegene. Venter.
-8. GitHub Pages: når `index.html` ikke lenger ligger i roten av `main`, slutter Pages-siden (`dice-mice.d.prodio.no`) å virke. Hva som skal skje med den (videresending eller slå av), bestemmes før merge til `main`. Venter.
-
-Ikke bestemt ennå: om man skal kunne komme tilbake til samme spill etter å ha lastet siden på nytt.
-
-«Kjøre spillet», «Filer», «Testing og verktøy», «Spillere og start», tester- og tilgjengelighet-agentene, github-flyt-skillen og README er oppdatert. Regel 4 var allerede oppdatert.
+- **Ikke bestemt ennå** (fra issue #56): om man skal kunne komme tilbake til samme spill etter å ha lastet siden på nytt.
 
 ## Senere (ikke lag før jeg ber om det)
 

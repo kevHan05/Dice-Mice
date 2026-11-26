@@ -4,7 +4,9 @@
 
 **Dice-Mice!** er et brettspill i nettleseren der musene kaster terning og løper i en spiral inn mot osten i midten – den som kommer først til osten, vinner.
 
-### ▶ [Spill her: kevhan05.github.io/Dice-Mice](https://kevhan05.github.io/Dice-Mice/)
+### ▶ [Spill her: dice-mice.onrender.com](https://dice-mice.onrender.com/)
+
+Spillet ligger på Render sitt gratisnivå. Har ingen spilt på en stund, sover serveren, og første besøk kan ta opptil et minutt.
 
 ![Spillet på PC: spiralbrettet med osten i midten, to mus, spesialfelt og en sovende katt, og sidepanelet med spillerne og terningen](skjermbilder/19-pc.png)
 
